@@ -33,8 +33,4 @@ for module in M1-istruzioni M2-capacita M3-governance M4-distribuzione; do
   done
 done
 
-# Pre-pull Context7 MCP so first invocation is fast
-echo "==> Pre-pulling Context7 MCP"
-npx -y @upstash/context7-mcp --help > /dev/null 2>&1 || true
-
 echo "==> Done. Open modules/M1-istruzioni/README.md to start."

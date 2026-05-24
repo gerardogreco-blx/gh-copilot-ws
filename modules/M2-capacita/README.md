@@ -65,22 +65,44 @@ Lo starter ha già pronto il file di configurazione MCP a livello workspace: `.v
 {
   "servers": {
     "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
     }
   }
 }
 ```
 
-Questo è il path che VS Code Copilot Chat riconosce automaticamente per gli MCP server di workspace. Quando apri il Codespace (o il workspace in locale), VS Code rileva il file e ti propone di avviare il server.
+**Perché HTTP remoto e non stdio locale**: Context7 espone un endpoint HTTP hosted (`https://mcp.context7.com/mcp`) che fornisce lo stesso protocollo MCP via HTTP invece che via stdio. Conseguenze pratiche:
+- nessun processo locale (`npx`, `node`, container) deve girare sulla tua macchina;
+- niente download all'avvio: il client apre solo una connessione HTTP;
+- non serve Node.js installato se hai scelto solo lo starter .NET o Python.
+
+VS Code Copilot Chat rileva automaticamente il file `.vscode/mcp.json` quando apri il workspace e ti propone di abilitare il server `context7`.
 
 **Per gestire i server MCP**:
 - Da Command Palette: `MCP: Open Workspace Folder Configuration` apre il file di config corrente.
-- Da Command Palette: `MCP: List Servers` mostra l'elenco dei server registrati e il loro stato (running / stopped).
+- Da Command Palette: `MCP: List Servers` mostra l'elenco dei server registrati e il loro stato.
 - Click sull'icona ingranaggio in Copilot Chat → "MCP Servers" per la stessa UI grafica.
 
-**Verifica**: in Copilot Chat (Agent mode), dovresti vedere `context7` nell'elenco dei server attivi. Al primo utilizzo, `npx -y @upstash/context7-mcp` scarica il package se non già presente (il `post-create.sh` del devcontainer lo pre-scarica per noi).
+**Rate limit & API key (opzionale)**: l'endpoint pubblico funziona anonimo per uso normale. Se l'aula del workshop satura il rate limit comune, puoi aggiungere una API key personale da [context7.com/dashboard](https://context7.com/dashboard):
+
+```json
+{
+  "servers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${input:context7-api-key}"
+      }
+    }
+  }
+}
+```
+
+Per il workshop questo passaggio non è richiesto.
+
+**Verifica**: in Copilot Chat (Agent mode), dovresti vedere `context7` nell'elenco dei server attivi.
 
 Ora chiedi all'agente:
 > Verifica che il handler di `POST /tasks` usi l'API attuale della libreria del mio starter (FastAPI / Hono / ASP.NET Core). Usa Context7 per recuperare le docs più recenti e dimmi se ci sono pattern più moderni per la validazione.

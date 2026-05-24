@@ -41,7 +41,7 @@ Se non puoi usare GitHub Codespaces, puoi seguire il workshop in locale. La supe
 | Git | per clonare il repo |
 | VS Code (≥ 1.110) | per agent mode e plugin support |
 | Estensione `GitHub.copilot` + `GitHub.copilot-chat` | sottoscrizione Copilot attiva richiesta |
-| Node.js 20+ | richiesto sempre (gli MCP server come Context7 girano via `npx`) |
+| Node.js 20+ | richiesto **solo se scegli lo starter TypeScript**. Context7 ora è un endpoint HTTP hosted, non più un processo locale |
 | **Uno** tra .NET 8 SDK / Python 3.11+ | solo per il linguaggio di starter che scegli (TypeScript usa già Node) |
 | `jq` (Unix) o PowerShell 7+ (Windows) | necessario per gli hook script in M3/M4 |
 
@@ -100,9 +100,13 @@ In tutti i casi, una volta avviato il server, una `curl http://localhost:<porta>
 
 ### Configurazione MCP server (Context7) in locale
 
-Lo starter contiene già `.vscode/mcp.json`. VS Code Copilot Chat lo legge automaticamente all'apertura del workspace e ti propone di avviare il server `context7`. Accetta — `npx` scaricherà il package alla prima esecuzione.
+Lo starter contiene già `.vscode/mcp.json` configurato per usare l'endpoint HTTP hosted di Context7 (`https://mcp.context7.com/mcp`). Niente processi locali, niente download.
+
+VS Code Copilot Chat rileva il file all'apertura del workspace e ti propone di abilitare il server. Accetta.
 
 Se non parte automaticamente: Command Palette → `MCP: List Servers` → seleziona `context7` → `Start`.
+
+Per uso intensivo (audience grande, rate limit) puoi configurare una API key personale da [context7.com/dashboard](https://context7.com/dashboard) aggiungendo `headers` al file di config. Per il workshop normale non serve.
 
 ### Configurazione hook (per M3 e M4)
 
