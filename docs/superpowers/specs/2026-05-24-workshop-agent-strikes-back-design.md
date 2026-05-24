@@ -115,7 +115,7 @@ Ogni modulo è **autosufficiente**: cartella propria, starter propri, **cartella
   - vincoli "non negoziabili" (es. "mai modificare X", "sempre eseguire Y prima di commit")
   - punti di ingresso utili (file/cartelle dove cercare cosa)
 - **Cosa NON deve contenere**: documentazione esaustiva del progetto, esempi prolissi, storie/decisioni storiche, contenuto che cambia spesso.
-- **Vincoli di lunghezza**: idealmente **< 200 righe**, hard-cap pratico ~500 righe. Sopra questa soglia: (a) costa token a ogni prompt, (b) l'agente "annacqua" l'attenzione, (c) sintomo che andrebbe spezzato in Skill. La regola: *"se serve solo a volte, non sta in AGENTS.md, sta in una Skill"*.
+- **Vincoli di lunghezza**: idealmente **< 200 righe**, hard-cap pratico ~500 righe. Sopra questa soglia: (a) costa token a ogni prompt, (b) la attenzione dell'agente si distribuisce su contenuto irrilevante, (c) sintomo che andrebbe spezzato in Skill. La regola: *"se serve solo a volte, non sta in AGENTS.md, sta in una Skill"*.
 
 *Skill (2')*
 - Unità componibile, on-demand, caricata dal'agente quando rilevante (non sempre).
@@ -159,7 +159,7 @@ Ogni modulo è **autosufficiente**: cartella propria, starter propri, **cartella
 
 *Subagent (2.5')*
 - Task delegato a un agente "figlio" che parte con **contesto isolato** (non eredita la chat precedente, solo il prompt che gli passi). Restituisce un risultato strutturato al main agent.
-- **Perché contesto isolato**: (a) il subagent non "annacqua" la sua attenzione con la conversazione precedente, (b) il main agent riceve un riassunto pulito invece dei dettagli intermedi, (c) parallelizzabile (più subagent in parallelo per task indipendenti).
+- **Perché contesto isolato**: (a) il subagent riceve solo il prompt esplicito, senza la cronologia conversazionale del main agent — meno rumore in input, (b) il main agent riceve un risultato strutturato invece dei dettagli intermedi, (c) parallelizzabile (più subagent in parallelo per task indipendenti).
 - **Quando usare un subagent vs ask mode**: subagent quando il task è ben definito e isolabile (review di un file, refactor di una funzione, ricerca focalizzata, generazione di test). Ask mode quando vuoi una conversazione iterativa.
 - **Anatomia di un subagent**:
   ```
@@ -177,7 +177,7 @@ Ogni modulo è **autosufficiente**: cartella propria, starter propri, **cartella
   Il `description` è il criterio con cui il main agent decide *quando* invocarlo. `tools` permette di restringere cosa il subagent può fare (principio del minimo privilegio).
 
 *MCP (1.5')*
-- "USB-C per i tool dell'agente". È *come* estendi le capacità, non *chi* le usa.
+- Protocollo aperto per esporre tool (funzioni invocabili) e risorse (dati leggibili) a un agente. È *come* estendi le capacità, non *chi* le usa.
 - Un MCP server espone tool (funzioni invocabili) e/o risorse (dati leggibili) via protocollo standard. Copilot può connettersi a MCP locali o remoti.
 - **Quando un MCP ha senso**: quando il problema **non è già risolto** da una CLI standard. Esempio: `gh-mcp` ha senso meno (`gh` CLI esiste già). **Context7** ha senso: porta docs aggiornate delle librerie, problema non risolto da CLI standard.
 
@@ -207,7 +207,7 @@ Motivo: molti MCP "famosi" (es. `github-mcp`) hanno controparte CLI (`gh`) che l
 **Teoria (4')**
 - Cos'è un hook: event handler che intercetta il ciclo di vita Copilot (`PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `SubagentStart`, ecc.).
 - Use case: **guardrail** (blocca azioni pericolose), **audit** (logga cosa fa l'agente), **automazione** (esegui qualcosa a fine sessione).
-- Punto chiave: gli hook sono **dell'organizzazione**, non dell'LLM. Non si possono "prompt-injectare via". Sono enforcement vero.
+- Punto chiave: gli hook sono **dell'organizzazione**, non dell'LLM. Non sono bypassabili tramite manipolazione del prompt. Sono enforcement deterministico.
 
 **Hands-on (7') — un singolo esercizio profondo: safety guard**
 

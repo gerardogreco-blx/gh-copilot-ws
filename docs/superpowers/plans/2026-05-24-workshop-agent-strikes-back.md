@@ -1358,7 +1358,7 @@ Write to `modules/M2-capacita/README.md`:
 ### Subagent
 - Task delegato a un agente "figlio" con **contesto isolato** (non eredita la chat: solo il prompt che gli passi).
 - Vantaggi del contesto isolato:
-  - Non "annacqua" l'attenzione con la conversazione precedente
+  - Non porta rumore della conversazione precedente — riceve solo il prompt esplicito
   - Il main agent riceve un riassunto pulito, non i dettagli intermedi
   - Parallelizzabile (più subagent in parallelo per task indipendenti)
 - Quando usare un subagent vs ask mode:
@@ -1383,7 +1383,7 @@ model: claude-sonnet-4-6
 Il `description` è il criterio con cui il main agent decide quando invocarlo. `tools` restringe cosa può fare (minimo privilegio).
 
 ### MCP
-- "USB-C per i tool dell'agente". Estende **come** l'agente acquisisce capacità, non chi le usa.
+- Protocollo aperto per esporre tool e risorse all'agente. Estende **come** l'agente acquisisce capacità, non chi le usa.
 - Un MCP server espone **tools** (funzioni invocabili) e **resources** (dati leggibili) via protocollo standard.
 - **Quando un MCP ha senso**: quando il problema **non è già risolto da una CLI standard**. Esempio: `gh-mcp` è meno utile perché esiste `gh`. **Context7** risolve un problema vero: docs aggiornate delle librerie, non risolto da CLI esistenti.
 
@@ -1608,7 +1608,7 @@ Un hook è un **event handler** che intercetta il ciclo di vita di Copilot. Even
 - **Automazione** — esegui hook a fine sessione.
 
 ### Differenza chiave
-Gli hook sono **dell'organizzazione**, non dell'LLM. Non si possono "prompt-injectare via". Sono enforcement vero, policy-as-code.
+Gli hook sono **dell'organizzazione**, non dell'LLM. Non sono bypassabili tramite manipolazione del prompt. Sono enforcement deterministico, policy-as-code.
 
 ## Hands-on (7 min) — un solo esercizio: safety guard
 
@@ -1931,7 +1931,7 @@ Write to `modules/M4-distribuzione/README.md`:
 ```markdown
 # Modulo M4 — Distribuzione · Plugins & Marketplace · 14 min
 
-> Obiettivo: vedere come un plugin **bundle-zia** skill + subagent + hook + MCP in un singolo artefatto distribuibile.
+> Obiettivo: vedere come un plugin **raccoglie** skill + subagent + hook + MCP in un singolo artefatto distribuibile.
 
 ## Teoria (4 min)
 
