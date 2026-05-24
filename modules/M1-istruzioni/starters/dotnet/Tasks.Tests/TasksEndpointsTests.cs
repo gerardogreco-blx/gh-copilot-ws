@@ -3,19 +3,15 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
-public class TasksEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
+public class TasksEndpointsTests
 {
-    private readonly HttpClient _client;
-
-    public TasksEndpointsTests(WebApplicationFactory<Program> factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private static HttpClient NewClient() => new WebApplicationFactory<Program>().CreateClient();
 
     [Fact]
     public async Task GetTasks_ReturnsEmptyList_Initially()
     {
-        var response = await _client.GetAsync("/tasks");
+        var client = NewClient();
+        var response = await client.GetAsync("/tasks");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var tasks = await response.Content.ReadFromJsonAsync<List<TaskApi.Tasks.TaskItem>>();
         Assert.NotNull(tasks);
@@ -25,7 +21,8 @@ public class TasksEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task PostTask_CreatesTask_WithTodoStatus()
     {
-        var response = await _client.PostAsJsonAsync("/tasks", new { title = "Test" });
+        var client = NewClient();
+        var response = await client.PostAsJsonAsync("/tasks", new { title = "Test" });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var created = await response.Content.ReadFromJsonAsync<TaskApi.Tasks.TaskItem>();
         Assert.NotNull(created);
