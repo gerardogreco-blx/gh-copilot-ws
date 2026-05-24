@@ -1,81 +1,119 @@
-# Modulo M2 — Capacità · Subagents + MCP · 18 min
+# Modulo M2 — Capacità · Subagents + MCP
 
-> Obiettivo: vedere come un agente può **delegare** task (subagent) e **acquisire nuovi tool** (MCP).
+> Obiettivo: vedere due assi indipendenti con cui si estende un agente. **Subagents**: delega di task con contesto isolato. **MCP**: protocollo standard per esporre nuovi tool e risorse all'agente.
 
-## Teoria (5 min)
+## Teoria
 
 ### Subagent
-- Task delegato a un agente "figlio" con **contesto isolato** (non eredita la chat: solo il prompt che gli passi).
-- Vantaggi del contesto isolato:
-  - Non "annacqua" l'attenzione con la conversazione precedente
-  - Il main agent riceve un riassunto pulito, non i dettagli intermedi
-  - Parallelizzabile (più subagent in parallelo per task indipendenti)
-- Quando usare un subagent vs ask mode:
-  - **Subagent**: task ben definito e isolabile (review file, refactor funzione, ricerca focalizzata, generazione test).
-  - **Ask mode**: conversazione iterativa, esplorazione, Q&A.
+
+Un subagent è un agente "figlio" invocato dal main agent per gestire un task delimitato. La caratteristica chiave è il **contesto isolato**: il subagent non eredita la cronologia conversazionale del main agent — riceve solo il prompt esplicito che gli si passa.
+
+Conseguenze concrete:
+- **Riduzione del rumore in input**: il subagent non deve discriminare tra istruzioni rilevanti per il suo task e dettagli accumulati nella conversazione precedente. La sua attenzione è concentrata sull'input ricevuto.
+- **Output strutturato verso il main agent**: il main agent riceve un risultato sintetico, non l'intero ragionamento intermedio. Questo limita la crescita del contesto del main agent (e quindi il costo per turno).
+- **Parallelizzabilità**: subagent indipendenti possono essere eseguiti in parallelo. Esempio tipico: lanciare contemporaneamente `code-reviewer` su 3 file diversi.
+
+**Quando usare un subagent**: task ben definito, isolabile, con output verificabile (code review di un file, generazione di test per una funzione, ricerca focalizzata, refactor mirato).
+
+**Quando NON usare un subagent**: conversazione iterativa, esplorazione open-ended, Q&A — meglio restare in modalità chat.
 
 #### Anatomia di un subagent
-```
-agents/<nome>.agent.md
-```
 
-Frontmatter:
+Un subagent è definito in un file `agents/<nome>.agent.md` con frontmatter YAML:
+
 ```yaml
 ---
 name: code-reviewer
-description: Specializzato in code review (correttezza, sicurezza, conformità ad AGENTS.md). Usalo per file/funzioni singole.
+description: Specialized subagent for code review. Invoke when you want a structured review of a file or function for correctness, security, AGENTS.md compliance, and test coverage.
 tools: [Read, Grep, Bash]
 model: claude-sonnet-4-6
 ---
 ```
 
-Il `description` è il criterio con cui il main agent decide quando invocarlo. `tools` restringe cosa può fare (minimo privilegio).
+- `name`: identificatore invocabile (`@code-reviewer` nella chat).
+- `description`: criterio di selezione del subagent da parte del main agent. Anche qui, in termini di *quando invocarlo*.
+- `tools`: **allowlist** dei tool che il subagent può usare (principio del minimo privilegio — il code-reviewer non ha bisogno di `Write` o `Edit`).
+- `model`: opzionale, per pinning di un modello specifico al subagent.
 
-### MCP
-- "USB-C per i tool dell'agente". Estende **come** l'agente acquisisce capacità, non chi le usa.
-- Un MCP server espone **tools** (funzioni invocabili) e **resources** (dati leggibili) via protocollo standard.
-- **Quando un MCP ha senso**: quando il problema **non è già risolto da una CLI standard**. Esempio: `gh-mcp` è meno utile perché esiste `gh`. **Context7** risolve un problema vero: docs aggiornate delle librerie, non risolto da CLI esistenti.
+### MCP (Model Context Protocol)
 
-### Insieme
-- Subagent = chi fa, con quale contesto.
-- MCP = quali tool e dati ha in mano.
-- Pattern componibile: subagent code-reviewer che usa Context7 per verificare API attuali.
+MCP è un **protocollo aperto** per esporre *tools* (funzioni invocabili) e *resources* (dati leggibili) a un agente, separando il contratto di interazione (JSON-RPC su stdio o HTTP) dall'implementazione del server.
 
-## Hands-on (10 min)
+Un MCP server è un processo (locale o remoto) che parla questo protocollo. L'agente lo registra come fornitore di capacità, e quando ha bisogno di un tool esposto dal server, lo invoca attraverso il protocollo. Lo stesso server può essere consumato da agenti diversi (Copilot, Claude, ecc.) senza modifiche.
 
-### Step 1 — Attiva Context7 e usalo (4')
+**Quando un MCP server fornisce valore**: quando espone capacità che **non sono già disponibili come CLI standard**. Un MCP che wrappa `git` o `gh` aggiunge poco rispetto a chiedere all'agente di usare quei comandi direttamente.
 
-In Copilot Chat (Agent), aggiungi Context7 come server MCP (la configurazione è in `.devcontainer/mcp/context7.json` — copiala nelle settings di Copilot Chat).
+**Esempio buono**: `Context7` espone *documentazione aggiornata* delle librerie del progetto (recuperata via API). Non c'è un equivalente CLI generico; il problema "le mie librerie sono cambiate e l'agente conosce una versione vecchia" è reale e non risolto altrimenti.
 
-Poi chiedi:
-> Usando le docs attuali della libreria del tuo starter (FastAPI / Hono / ASP.NET Core) tramite Context7, verifica che il handler di `POST /tasks` usi l'API più recente. Se trovi un'API più moderna per la validazione, proponi un refactor.
+**Esempio meno utile**: `gh-mcp` espone le API di GitHub. Ma il CLI `gh` fa già lo stesso, ed è già nel PATH dell'agente.
 
-Osserva l'MCP fetchare le docs nella chat.
+### Composizione subagent + MCP
 
-### Step 2 — Invoca un subagent custom (4')
+I due assi sono ortogonali:
+- Il **subagent** definisce *chi* esegue, *con quale slice* di scope, *con quale contesto*.
+- L'**MCP** definisce *quali tool* sono disponibili durante l'esecuzione.
 
-Lo starter ha già un subagent: `agents/code-reviewer.agent.md`. Aprilo per vederne il frontmatter.
+Un subagent che gira con accesso a un MCP è un'unità di lavoro componibile e auditabile.
 
-Poi in Copilot Chat:
-> @code-reviewer revisiona il controller dei task per correttezza, gestione errori e conformità al nostro AGENTS.md.
+## Hands-on
 
-Osserva: il subagent parte con contesto isolato, restituisce una review strutturata.
+### Step 1 — Attiva Context7 in Copilot Chat e usalo
 
-### Step 3 — Componi i due (2')
+Il devcontainer ha già pronto il file di configurazione `.devcontainer/mcp/context7.json`:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    }
+  }
+}
+```
+
+Per attivarlo in VS Code Copilot Chat:
+1. Apri Copilot Chat in modalità **Agent**.
+2. Click sull'icona ingranaggio (Configure Chat) → "MCP Servers".
+3. Aggiungi un nuovo server con la stessa configurazione del file `context7.json`.
+4. Verifica che `context7` compaia nella lista dei server attivi.
+
+Ora chiedi all'agente:
+> Verifica che il handler di `POST /tasks` usi l'API attuale della libreria del mio starter (FastAPI / Hono / ASP.NET Core). Usa Context7 per recuperare le docs più recenti e dimmi se ci sono pattern più moderni per la validazione.
+
+Osserva: l'agente invoca un tool di Context7 (visibile nella chat come tool-call), riceve le docs, e produce un'analisi confrontando il codice attuale con l'API documentata.
+
+### Step 2 — Invoca il subagent `code-reviewer`
+
+Lo starter contiene `agents/code-reviewer.agent.md` con il frontmatter visto sopra. Aprilo e leggilo: nota la allowlist di tool (`Read`, `Grep`, `Bash` — niente `Write`/`Edit`).
+
+In Copilot Chat:
+> @code-reviewer revisiona il controller dei task (`TasksEndpoints.cs` / `routes.ts` / `main.py`) per correttezza, sicurezza e conformità ad AGENTS.md.
+
+Osserva:
+- il subagent parte (la chat mostra l'invocazione del subagent come task separato);
+- il contesto della tua conversazione precedente NON viene passato — solo il prompt esplicito;
+- l'output è strutturato nei 5 blocchi definiti dal subagent (Correctness, Security, AGENTS.md compliance, Test coverage, Suggested fixes).
+
+### Step 3 — Composizione: subagent + MCP insieme
 
 Chiedi:
-> @code-reviewer revisiona il controller usando Context7 per verificare che ogni chiamata libreria sia ancora API corrente.
+> @code-reviewer revisiona il controller dei task. Usa Context7 per verificare che ogni chiamata libreria usi l'API attuale (non deprecata).
 
-## Wrap (3')
+Il subagent ha accesso a Context7 attraverso l'agente che lo invoca: la review include ora un check di conformità alla versione corrente delle librerie.
 
-- **Subagent**: chi fa il lavoro, su quale slice, con quale contesto isolato.
-- **MCP**: quali tool e quali dati ha l'agente.
-- Insieme: sistema componibile dove ogni unità ha responsabilità chiara.
+## Wrap
 
-## Output del modulo
-- Context7 MCP configurato e funzionante.
-- Un subagent `code-reviewer` custom invocabile via `@code-reviewer`.
+- **Subagent**: unità di esecuzione delegata, contesto isolato, output strutturato, eventualmente parallelizzabile.
+- **MCP**: protocollo per esporre tool/risorse all'agente. Vale la pena quando il problema risolto **non è già coperto da una CLI standard**.
+- Insieme producono pattern componibili e auditabili: "chi fa cosa, con quale contesto, con quali tool".
 
-Se sei bloccato: `solution/{linguaggio}/`.
+## Cosa ti porti a casa
 
-➡️ Prossimo: [`../M3-governance/README.md`](../M3-governance/README.md)
+- `context7` MCP server registrato e funzionante in Copilot Chat.
+- Subagent `code-reviewer` invocabile via `@code-reviewer` nello starter.
+
+Se ti blocchi: `solution/{linguaggio}/` ha lo stato finale del modulo.
+
+➡️ Prossimo modulo: [`../M3-governance/README.md`](../M3-governance/README.md)

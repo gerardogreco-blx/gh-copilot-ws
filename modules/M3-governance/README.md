@@ -1,67 +1,120 @@
-# Modulo M3 — Governance · Hooks · 14 min
+# Modulo M3 — Governance · Hooks
 
-> Obiettivo: configurare un **safety guard** che intercetta i tool che Copilot sta per invocare e blocca quelli pericolosi.
+> Obiettivo: portare gli agenti in contesti dove la libertà di esecuzione **deve essere controllata**. I hook sono il meccanismo per applicare policy esecutive deterministiche al ciclo di vita dell'agente — `policy-as-code` per il comportamento agentic.
 
-## Teoria (4 min)
+## Teoria
 
-### Cos'è un hook
-Un hook è un **event handler** che intercetta il ciclo di vita di Copilot. Eventi disponibili:
-- `SessionStart` — inizio sessione
-- `UserPromptSubmit` — ogni prompt che invii
-- `PreToolUse` — **prima** che l'agente esegua un tool (Bash, Edit, Write, ...)
-- `PostToolUse` — dopo l'esecuzione
-- `SubagentStart` / `SubagentStop` — ciclo di vita subagent
-- `PreCompact` / `Stop` — compressione contesto / fine sessione
+### Cosa è un hook
 
-### Use case
-- **Guardrail** — blocca azioni pericolose (PreToolUse + exit code != 0).
-- **Audit** — logga cosa fa l'agente (PostToolUse).
-- **Automazione** — esegui hook a fine sessione.
+Un hook è un **handler esterno all'LLM**, eseguito dall'host (Copilot CLI o Copilot Chat in VS Code) in corrispondenza di eventi specifici del ciclo di vita di una sessione agentic. Eventi tipici:
 
-### Differenza chiave
-Gli hook sono **dell'organizzazione**, non dell'LLM. Non si possono "prompt-injectare via". Sono enforcement vero, policy-as-code.
+| Evento | Quando viene chiamato |
+|---|---|
+| `SessionStart` | All'avvio della sessione |
+| `UserPromptSubmit` | Ogni volta che l'utente invia un prompt |
+| `PreToolUse` | Prima dell'esecuzione di un tool (Bash, Edit, Write, MCP call…) |
+| `PostToolUse` | Dopo l'esecuzione di un tool |
+| `SubagentStart` / `SubagentStop` | Ciclo di vita di un subagent |
+| `PreCompact` | Prima di una compressione automatica del contesto |
+| `Stop` | A fine sessione |
 
-## Hands-on (7 min) — un solo esercizio: safety guard
+Il contratto di interazione tipico è semplice: il hook riceve un JSON su stdin con il payload dell'evento, può fare qualsiasi cosa (leggere file, chiamare servizi, scrivere log), e termina con un exit code che l'host interpreta:
+- `0`: l'evento procede normalmente.
+- diverso da `0`: l'host **blocca** l'azione e mostra all'agente lo stdout del hook come messaggio di errore (l'agente può quindi reagire — ad esempio riformulando il comando).
 
-Lo starter ha:
-- `.copilot/policy.yml` — file di policy con pattern bloccati (preset)
-- `.copilot/hooks/pre-tool-use.sh` — hook che valuta tool call vs policy
+### Use case principali
 
-### Step 1 — Vedi il blocco in azione (2')
+- **Guardrail** (`PreToolUse` con exit ≠ 0): blocca operazioni distruttive prima che vengano eseguite.
+- **Audit** (`PostToolUse` o `Stop`): registra cosa l'agente ha fatto, su quale file, con quale parametro.
+- **Automazione** (`SessionStart` o `Stop`): inizializza state, esegui cleanup, invia notifiche.
 
-In Copilot Chat (Agent):
+### Differenza chiave rispetto alle istruzioni in AGENTS.md o nelle Skill
+
+Un'istruzione in AGENTS.md ("non eseguire `rm -rf`") è un *suggerimento all'LLM*, che può essere ignorato o aggirato da un prompt sufficientemente persuasivo o da un cambio di contesto. Un hook è **codice deterministico controllato dall'organizzazione**: esegue sempre, indipendentemente dal prompt, e non può essere disabilitato tramite chat. È enforcement reale, non guidance.
+
+## Hands-on
+
+### Configurazione
+
+Lo starter ha già due artefatti pronti in `.copilot/`:
+
+- `.copilot/policy.yml`: il file di policy, leggibile e versionabile.
+- `.copilot/hooks/pre-tool-use.sh`: l'implementazione bash del hook `PreToolUse`.
+- `.copilot/hooks/pre-tool-use.ps1`: l'equivalente PowerShell per ambienti Windows.
+
+Apri `policy.yml` per vederne la struttura:
+
+```yaml
+shell_blocked:
+  - pattern: 'rm\s+-rf?'
+    reason: "Distruzione ricorsiva non recuperabile"
+  - pattern: 'git\s+push\s+--force(\s|$)'
+    reason: "Force push può sovrascrivere lavoro altrui"
+  # ...
+
+file_writes_blocked:
+  - pattern: '\.key$|\.pem$'
+    reason: "Mai scrivere chiavi crittografiche da codice generato"
+  # ...
+```
+
+Il hook (sh o ps1) implementa la stessa logica: legge il JSON in input dall'host, identifica il tool (`Bash`, `Edit`, `Write`, `MultiEdit`), valuta i parametri contro le regex della sezione pertinente, e termina con exit 1 + messaggio se c'è match.
+
+### Step 1 — Osserva il blocco in azione
+
+Verifica che il hook sia configurato come `PreToolUse` handler nelle impostazioni di Copilot Chat (il devcontainer lo fa automaticamente; se hai dovuto attivarlo a mano, fallo ora).
+
+In Copilot Chat (modalità Agent), chiedi:
 > Fai pulizia di tutti i file temporanei in `/tmp`.
 
-L'agente prova `rm -rf /tmp/*` → l'hook blocca → l'agente riformula con `find /tmp -type f -delete`.
+L'agente proverà ad eseguire `rm -rf /tmp/*` come tool `Bash`. Il hook intercetta, matcha il pattern `rm\s+-rf?`, e blocca con exit 1 + messaggio `BLOCKED by policy.yml: Distruzione ricorsiva non recuperabile`.
 
-### Step 2 — Estendi la policy (3')
+L'agente vede il messaggio di errore e — tipicamente — riformula con un'alternativa sicura, ad esempio `find /tmp -type f -delete`, che non matcha alcun pattern e quindi passa.
 
-Apri `.copilot/policy.yml`. Aggiungi nella sezione `file_writes_blocked`:
+### Step 2 — Estendi la policy
+
+Apri `.copilot/policy.yml` e aggiungi nella sezione `file_writes_blocked` (prima della riga `# esercizio:`):
 
 ```yaml
   - pattern: '\.env$'
     reason: "Mai scrivere file di environment dal codice generato"
 ```
 
-Poi:
+Salva. Il hook rilegge il file di policy ad ogni invocazione, quindi non serve riavviare nulla.
+
+Ora chiedi all'agente:
 > Crea un file `.env` con credenziali demo per il database locale.
 
-Osserva: blocco visibile.
+L'agente tenta `Write` con `file_path: .env`. Il hook matcha la nuova regola e blocca.
 
-### Step 3 — Customizza il messaggio (2')
+### Step 3 — Personalizza il messaggio di blocco
 
-Nell'hook `pre-tool-use.sh`, cambia il messaggio di blocco aggiungendo riga di spiegazione/suggerimento. Riprova: l'agente reagisce diversamente.
+Apri `.copilot/hooks/pre-tool-use.sh` (o la versione `.ps1` se usi Windows) e modifica la funzione `block` per fornire un messaggio più informativo all'agente:
 
-## Wrap (3')
+```bash
+block() {
+  local reason="$1"
+  echo "🛑 BLOCKED by .copilot/policy.yml"
+  echo "Reason: $reason"
+  echo ""
+  echo "Suggerimento: riformula in modo non distruttivo, oppure modifica policy.yml se sei sicuro."
+  exit 1
+}
+```
 
-- Hook = fiducia controllata.
-- Il `policy.yml` lo copi nel repo aziendale lunedì.
-- Bridge a M4: stesso pattern in `dev-guardian` del marketplace.
+Riprova un comando che causa blocco: l'agente riceve un messaggio strutturato e tende a reagire diversamente — non solo "ho ricevuto errore" ma "ho ricevuto un suggerimento sul cosa fare ora".
 
-## Output del modulo
-- `.copilot/policy.yml` riusabile.
-- Hook `pre-tool-use.sh` funzionante.
+## Wrap
 
-Se sei bloccato: `solution/{linguaggio}/`.
+- I hook sono `policy-as-code`: regole versionate, deterministiche, eseguite fuori dall'LLM.
+- Sono il livello di controllo che permette di portare gli agenti in repository aziendali senza paura: chiunque legge il `policy.yml` capisce cosa è bloccato e perché.
+- A differenza delle istruzioni in AGENTS.md, **non sono bypassabili tramite manipolazione del prompt**.
 
-➡️ Prossimo: [`../M4-distribuzione/README.md`](../M4-distribuzione/README.md)
+## Cosa ti porti a casa
+
+- `.copilot/policy.yml` riusabile (copia-incollabile in un repo aziendale lunedì mattina).
+- Hook `pre-tool-use.sh` + `pre-tool-use.ps1` funzionanti.
+
+Se ti blocchi: `solution/{linguaggio}/` ha lo stato finale del modulo.
+
+➡️ Prossimo modulo: [`../M4-distribuzione/README.md`](../M4-distribuzione/README.md)
