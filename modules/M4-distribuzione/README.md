@@ -105,6 +105,8 @@ plugins/copilot-safety-guard/
     └── pre-tool-use.ps1                 (copiato da M3, variante pwsh)
 ```
 
+Il plugin manifest (`plugin.json`) dichiara la chiave `hooks.preToolUse` puntando direttamente allo script. Quando un utente installa il plugin, il client (Copilot CLI / Copilot Chat / Claude Code) registra automaticamente il hook con il proprio meccanismo nativo — non serve creare manualmente `.github/hooks/pre-tool-use.json` come avresti fatto a mano. Il manifest è il "punto di registrazione" centralizzato del bundle.
+
 E un manifest `plugins/copilot-safety-guard/plugin.json`:
 
 ```json

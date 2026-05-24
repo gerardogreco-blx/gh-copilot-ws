@@ -34,6 +34,36 @@ Un'istruzione in AGENTS.md ("non eseguire `rm -rf`") è un *suggerimento all'LLM
 
 ## Hands-on
 
+### Registrazione del hook in Copilot Chat
+
+Lo starter contiene già il file di registrazione: `.github/hooks/pre-tool-use.json`. Questo è il path che VS Code Copilot Chat conosce di default per i hook a livello workspace.
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "./.copilot/hooks/pre-tool-use.sh",
+        "timeout": 15
+      }
+    ]
+  }
+}
+```
+
+Il `command` punta allo script implementativo in `.copilot/hooks/pre-tool-use.sh`. Su Windows, sostituiscilo con `./.copilot/hooks/pre-tool-use.ps1` (oppure aggiungi una seconda entry nell'array per registrare entrambi).
+
+**Per attivare i hook in Copilot Chat**, abilita questo setting (User Settings JSON):
+
+```json
+"chat.useCustomAgentHooks": true
+```
+
+In alternativa al setup manuale, esiste lo **slash command** `/hooks` direttamente in Copilot Chat: digitalo nel chat input e premi invio per aprire una UI guidata di configurazione. Apre il file di registrazione con il cursore già pronto per la modifica.
+
+**Verifica che il hook sia caricato**: in Copilot Chat, esegui `/hooks` per vedere la lista degli hook registrati per la sessione corrente. Deve apparire un PreToolUse che punta a `pre-tool-use.sh`.
+
 ### Configurazione
 
 Lo starter ha già due artefatti pronti in `.copilot/`:
