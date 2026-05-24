@@ -13,10 +13,6 @@
 
 Se il Codespace non parte: vedi [setup locale](#setup-locale-fallback).
 
-## Per gli speaker
-- Runbook minuto-per-minuto: [`docs/timing-conduzione.md`](docs/timing-conduzione.md)
-- Email pre-workshop: [`email-template.md`](email-template.md)
-
 ## Struttura del workshop
 
 | Modulo | Topic | Durata | Presentato da |
@@ -36,14 +32,103 @@ Se il Codespace non parte: vedi [setup locale](#setup-locale-fallback).
 
 ## Setup locale (fallback)
 
-Se non usi Codespace, ti serve almeno **uno** tra: .NET 8 SDK, Node 20+, Python 3.11+. Più VS Code + estensione GitHub Copilot autenticata.
+Se non puoi usare GitHub Codespaces, puoi seguire il workshop in locale. La superficie obbligatoria è **VS Code + estensione GitHub Copilot autenticata**; gli SDK servono solo per il linguaggio che scegli.
 
-## Lingue
-- README, docs, moduli: **italiano**.
-- Codice, nomi, branch, commit: **inglese**.
+### Prerequisiti software
 
-## Risorse post-workshop
-Vedi [`docs/follow-up.md`](docs/follow-up.md).
+| Tool | Note |
+|---|---|
+| Git | per clonare il repo |
+| VS Code (≥ 1.110) | per agent mode e plugin support |
+| Estensione `GitHub.copilot` + `GitHub.copilot-chat` | sottoscrizione Copilot attiva richiesta |
+| Node.js 20+ | richiesto sempre (gli MCP server come Context7 girano via `npx`) |
+| **Uno** tra .NET 8 SDK / Python 3.11+ | solo per il linguaggio di starter che scegli (TypeScript usa già Node) |
+| `jq` (Unix) o PowerShell 7+ (Windows) | necessario per gli hook script in M3/M4 |
+
+### Passi setup
+
+```bash
+# 1. Clone del repo
+git clone https://github.com/<owner>/<repo>.git
+cd <repo>
+
+# 2. Apri il workspace in VS Code
+code .
+
+# 3. Verifica Copilot attivo (icona in basso a destra in VS Code)
+
+# 4. Restore dipendenze per il tuo linguaggio
+#    Solo per il modulo che inizi, non per tutti:
+
+# .NET
+cd modules/M1-istruzioni/starters/dotnet && dotnet restore && cd -
+
+# TypeScript
+cd modules/M1-istruzioni/starters/typescript && npm install && cd -
+
+# Python (con venv consigliato)
+cd modules/M1-istruzioni/starters/python
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+cd -
+```
+
+### Verifica che lo starter giri
+
+Per testare che lo starter funzioni prima di iniziare i moduli:
+
+```bash
+# .NET
+cd modules/M1-istruzioni/starters/dotnet
+dotnet test           # → 2 test passano
+dotnet run            # → server su http://localhost:5000
+
+# TypeScript
+cd modules/M1-istruzioni/starters/typescript
+npm test              # → 2 test passano
+npm run dev           # → server su http://localhost:3000
+
+# Python
+cd modules/M1-istruzioni/starters/python
+source .venv/bin/activate
+pytest                # → 2 test passano
+uvicorn app.main:app  # → server su http://localhost:8000
+```
+
+In tutti i casi, una volta avviato il server, una `curl http://localhost:<porta>/tasks` deve restituire `[]`.
+
+### Configurazione MCP server (Context7) in locale
+
+Lo starter contiene già `.vscode/mcp.json`. VS Code Copilot Chat lo legge automaticamente all'apertura del workspace e ti propone di avviare il server `context7`. Accetta — `npx` scaricherà il package alla prima esecuzione.
+
+Se non parte automaticamente: Command Palette → `MCP: List Servers` → seleziona `context7` → `Start`.
+
+### Configurazione hook (per M3 e M4)
+
+Gli starter di M3 e M4 hanno già `.github/hooks/pre-tool-use.json` (il file di registrazione) e `.copilot/hooks/pre-tool-use.sh` (la versione bash) + `.copilot/hooks/pre-tool-use.ps1` (la versione PowerShell).
+
+Per abilitare i hook in Copilot Chat (User Settings JSON):
+
+```json
+"chat.useCustomAgentHooks": true
+```
+
+Su Windows, modifica `.github/hooks/pre-tool-use.json` per puntare alla versione `.ps1`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      { "type": "command", "command": "pwsh -File ./.copilot/hooks/pre-tool-use.ps1", "timeout": 15 }
+    ]
+  }
+}
+```
+
+### Quale modulo per primo
+
+Apri [`docs/00-intro.md`](docs/00-intro.md) per il quadro generale, poi `modules/M1-istruzioni/README.md`.
 
 ## Licenza
-MIT.
+MIT

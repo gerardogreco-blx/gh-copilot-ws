@@ -59,25 +59,28 @@ Un subagent che gira con accesso a un MCP è un'unità di lavoro componibile e a
 
 ### Step 1 — Attiva Context7 in Copilot Chat e usalo
 
-Il devcontainer ha già pronto il file di configurazione `.devcontainer/mcp/context7.json`:
+Lo starter ha già pronto il file di configurazione MCP a livello workspace: `.vscode/mcp.json`.
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "context7": {
+      "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
-      "env": {}
+      "args": ["-y", "@upstash/context7-mcp"]
     }
   }
 }
 ```
 
-Per attivarlo in VS Code Copilot Chat:
-1. Apri Copilot Chat in modalità **Agent**.
-2. Click sull'icona ingranaggio (Configure Chat) → "MCP Servers".
-3. Aggiungi un nuovo server con la stessa configurazione del file `context7.json`.
-4. Verifica che `context7` compaia nella lista dei server attivi.
+Questo è il path che VS Code Copilot Chat riconosce automaticamente per gli MCP server di workspace. Quando apri il Codespace (o il workspace in locale), VS Code rileva il file e ti propone di avviare il server.
+
+**Per gestire i server MCP**:
+- Da Command Palette: `MCP: Open Workspace Folder Configuration` apre il file di config corrente.
+- Da Command Palette: `MCP: List Servers` mostra l'elenco dei server registrati e il loro stato (running / stopped).
+- Click sull'icona ingranaggio in Copilot Chat → "MCP Servers" per la stessa UI grafica.
+
+**Verifica**: in Copilot Chat (Agent mode), dovresti vedere `context7` nell'elenco dei server attivi. Al primo utilizzo, `npx -y @upstash/context7-mcp` scarica il package se non già presente (il `post-create.sh` del devcontainer lo pre-scarica per noi).
 
 Ora chiedi all'agente:
 > Verifica che il handler di `POST /tasks` usi l'API attuale della libreria del mio starter (FastAPI / Hono / ASP.NET Core). Usa Context7 per recuperare le docs più recenti e dimmi se ci sono pattern più moderni per la validazione.
