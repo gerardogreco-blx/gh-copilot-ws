@@ -1,34 +1,37 @@
 ---
 name: endpoint-creator
-description: Da usare quando si crea un nuovo endpoint REST in questo repo. Spiega validazione, posizione, status code, struttura test, naming.
+description: Use when creating a new REST endpoint in this repo. Covers validation, code location, status codes, test structure, and naming conventions.
 ---
 
-# Come si crea un endpoint REST qui
+# How to create a REST endpoint in this repo
 
-## 1. Posizione del codice
-- **.NET**: `Tasks/TasksEndpoints.cs` (metodo statico in `TasksEndpoints` esteso da `MapTasks(this WebApplication app)`).
-- **TypeScript**: `src/tasks/routes.ts` (funzione `tasksRoutes()`).
-- **Python**: `app/main.py` (funzione decorata con `@app.<verb>`).
+## 1. Code location
+- **.NET**: `Tasks/TasksEndpoints.cs` — add the route inside `MapTasks(this WebApplication app)`.
+- **TypeScript**: `src/tasks/routes.ts` — add the route inside `tasksRoutes()`.
+- **Python**: `app/main.py` — define a function decorated with `@app.<verb>`.
 
-## 2. Validazione input
-- Input invalido (campo mancante, tipo sbagliato, valore fuori dominio) → status `400` con body JSON `{ "error": "<messaggio breve>" }`.
-- Per il body, in Python usa `pydantic.BaseModel`. In TS controlla type-narrowing + `typeof`. In .NET usa record + check manuale `string.IsNullOrWhiteSpace`.
+## 2. Input validation
+- Invalid input (missing field, wrong type, value out of domain) must return status `400` with body `{ "error": "<short message>" }`.
+- Python: use a `pydantic.BaseModel` for the request body.
+- TypeScript: use type-narrowing checks (`typeof body.title === "string"`).
+- .NET: use a record + manual checks like `string.IsNullOrWhiteSpace`.
 
-## 3. Status code da rispettare
-| Operazione      | Status |
-|-----------------|--------|
-| GET (read)      | 200    |
-| POST (create)   | 201 + `Location` header |
-| PATCH (update)  | 200    |
-| Resource missing| 404    |
-| Validation fail | 400    |
+## 3. Status codes
+| Operation        | Status |
+|------------------|--------|
+| GET (read)       | 200    |
+| POST (create)    | 201 + `Location` header |
+| PATCH (update)   | 200    |
+| Resource missing | 404    |
+| Validation fail  | 400    |
 
-## 4. Test obbligatorio
-Ogni endpoint ha:
-- 1 test **happy path** (input valido → status atteso + body corretto)
-- 1 test **error case** (input invalido → 400 con messaggio specifico)
-I test stanno accanto al codice di produzione (`Tasks.Tests/`, `src/tasks/*.test.ts`, `tests/test_tasks.py`).
+## 4. Mandatory tests
+Every endpoint ships with:
+- one **happy path** test (valid input → expected status + body)
+- one **error case** test (invalid input → 400 with a specific message)
+
+Tests live next to production code: `Tasks.Tests/` (.NET) · `src/tasks/*.test.ts` (TS) · `tests/test_tasks.py` (Python).
 
 ## 5. Naming
-- Path REST: kebab-case (`/tasks/stats`, NON `/taskStats`).
-- IDs nei path: typed quando possibile (`{id:int}` in .NET).
+- REST paths in kebab-case (`/tasks/stats`, never `/taskStats`).
+- Typed path parameters when possible (`{id:int}` in .NET).
