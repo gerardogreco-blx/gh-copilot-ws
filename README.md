@@ -2,7 +2,7 @@
 
 > Workshop hands-on di 90 minuti su agenti Copilot: AGENTS.md, Skills, Subagents, MCP, Hooks, Plugins & Marketplace + intro a Spec-Driven Development.
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/<owner>/<repo>?quickstart=1)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/render93/gh-copilot-ws)
 
 ## Per chi partecipa
 
