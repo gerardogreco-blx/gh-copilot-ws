@@ -1,6 +1,6 @@
 # Modulo M1 - Istruzioni · AGENTS.md + Skills
 
-> Obiettivo: capire **come si descrive un repo a un agente** (AGENTS.md) e **come si forniscono procedure on-demand componibili** (Skills). Vedere in pratica la differenza tra "regole sempre attive" e "know-how caricato quando serve".
+> Obiettivo: capire come si descrive un repo a un file AGENTS.md e come si crea una Skill. Vedere in pratica la differenza tra "regole sempre attive" e "know-how caricato quando serve".
 
 ## Teoria
 
@@ -20,7 +20,7 @@
 - Storia delle decisioni o changelog (lo dice `git log`).
 - Informazioni che cambiano frequentemente (ad ogni modifica si paga la regression del prompt).
 
-**Vincolo pratico di lunghezza**: < 200 righe è sano, hard-cap sui 500. Sopra questa soglia: il costo in token per prompt diventa percepibile, l'attenzione dell'agente si distribuisce, ed è il segnale che alcune regole vanno spostate in una Skill (caricata solo quando serve).
+**Vincolo pratico di lunghezza**: < 200 righe è sano, hard-cap sui 500. Sopra questa soglia: il costo in token per prompt diventa percepibile, l'attenzione dell'agente si distribuisce, ed è il segnale che alcune regole vanno spostate in una Skill.
 
 ### Skill
 
@@ -33,7 +33,7 @@ skills/<nome-skill>/
 └── resources/        ← (opzionale) template, esempi, schema
 ```
 
-Il file `SKILL.md` ha un frontmatter YAML con due campi critici:
+Il file `SKILL.md` ha un frontmatter YAML con due campi obbligatori:
 
 ```yaml
 ---
@@ -43,7 +43,7 @@ description: Use when creating a new REST endpoint in this repo. Covers validati
 ```
 
 - `name`: identificatore tecnico in kebab-case.
-- `description`: la frase con cui l'agente decide **se e quando** caricare la skill. Va scritta in termini di *quando è utile* (trigger condition), **non** di *cosa contiene* (table of contents). Una buona `description` produce auto-loading affidabile; una vaga richiede di nominare esplicitamente la skill ad ogni invocazione.
+- `description`: la frase con cui l'agente decide **se e quando** caricare la skill. Una buona `description` produce auto-loading affidabile; una vaga richiede di nominare esplicitamente la skill ad ogni invocazione.
 
 ### Differenza pratica AGENTS.md vs Skill
 
@@ -52,9 +52,7 @@ description: Use when creating a new REST endpoint in this repo. Covers validati
 | Caricamento | sempre, in ogni prompt | on-demand, quando l'agente lo decide |
 | Costo token | costante | pagato solo se serve |
 | Granularità | regole macro del repo | procedura specifica (es. "creare un endpoint") |
-| Numero per repo | uno (al root) | molte (composabili) |
-
-Regola di pollice: *"se questa regola serve sempre, in AGENTS.md. Se serve solo a volte, in una Skill."*
+| Numero per repo | uno (al root) | molte |
 
 ## Hands-on
 
@@ -62,22 +60,22 @@ Scegli il tuo linguaggio in `starters/dotnet`, `starters/typescript`, `starters/
 
 ### Step 1 - Verifica che AGENTS.md guidi l'agente
 
-Lo starter ha già un `AGENTS.md` che descrive: stack, struttura della Task API, convenzioni di naming, validazione, status code, vincolo "ogni endpoint ha un test".
+Lo starter ha già un `AGENTS.md` nella root che descrive: stack, struttura della Task API, convenzioni di naming, validazione, status code, vincolo "ogni endpoint ha un test".
 
 In Copilot Chat (modalità **Agent**) chiedi:
-> Aggiungi un endpoint `GET /tasks/stats` che restituisce il conteggio dei task per stato in formato `{ "todo": N, "done": M }`.
+> Nel progetto `@modules/M1-istruzioni/starters/<linguaggio>` aggiungi un endpoint `PUT /tasks/:id` che sostituisce completamente un task esistente. Il body deve contenere `title` e `status`, e l'endpoint restituisce il task aggiornato.
 
 Osserva nella risposta dell'agente:
 - la posizione del nuovo endpoint (allineata alle convenzioni in AGENTS.md);
-- la validazione (assente in questo caso perché è una GET, ma corretta dove serve);
-- lo status code di risposta (`200` per la GET);
+- la **validazione del body** (entrambi i campi richiesti — `PUT` ha semantica *replace*, quindi tutti i campi del payload sono obbligatori);
+- gli status code di risposta (`200` se il task esiste ed è aggiornato, `404` se l'id non esiste, `400` se il body è invalido);
 - il test generato accanto al codice di produzione.
 
-**Verifica**: l'agente segue il contratto del repo *senza che tu glielo abbia detto in chat*. È AGENTS.md che lo ha guidato.
+**Verifica**: l'agente segue il contratto della repo *senza che tu glielo abbia detto in chat*. È AGENTS.md che lo ha guidato.
 
 ### Step 2 - Crea una Skill e osserva l'auto-loading
 
-Crea il file `.github/skills/endpoint-creator/SKILL.md` **al root del workspace** (il root del repo che hai forkato), con questo contenuto:
+Crea il file `.github/skills/endpoint-creator/SKILL.md` *nella root del workspace** (la root del repo che hai forkato), con questo contenuto:
 
 > **Nota**: VS Code Copilot Chat cerca le skill in `.github/skills/` al workspace root — ecco perché va lì, non dentro la cartella della starter.
 
@@ -99,23 +97,23 @@ description: Use when creating a new REST endpoint in this repo. Covers validati
 - Python: pydantic.BaseModel; TS: type-narrowing; .NET: record + manual checks
 
 ## 3. Status codes
-- 200 GET · 201 POST + Location header · 200 PATCH · 404 not found · 400 validation
+- 200 GET · 201 POST + Location header · 200 PUT (replace) · 200 PATCH · 404 not found · 400 validation
 
 ## 4. Tests
 Every endpoint ships with one happy path test and one error case test.
 
 ## 5. Naming
-Kebab-case paths (`/tasks/stats`). Typed path params (`{id:int}` in .NET).
+Kebab-case paths (e.g. `/tasks/by-status`). Typed path params (`{id:int}` in .NET).
 ```
 
 Ora chiedi all'agente, **senza nominare la skill**:
-> Aggiungi un endpoint `DELETE /tasks/:id` che cancella un task esistente.
+> Nel progetto `@modules/M1-istruzioni/starters/<linguaggio>` aggiungi un endpoint `DELETE /tasks/:id` che cancella un task esistente.
 
 Osserva: l'agente carica autonomamente la skill `endpoint-creator` perché la `description` del frontmatter dichiara *"Use when creating a new REST endpoint"*, e il prompt soddisfa quel trigger. Vedrai nella chat (a seconda della superficie) un riferimento esplicito tipo *"Loading skill: endpoint-creator"* oppure la skill comparirà nella context list del turno.
 
 ### Step 3 - Confronta gli output
 
-Ripeti lo stesso prompt di Step 1 (l'endpoint stats) ma con la skill ora presente.
+Ripeti lo stesso prompt di Step 1 (l'endpoint `PUT /tasks/:id`) ma con la skill ora presente.
 
 Confronta:
 - la struttura del codice (più aderente alle regole della skill);
