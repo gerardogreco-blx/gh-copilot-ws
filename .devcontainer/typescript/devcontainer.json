@@ -14,7 +14,9 @@
       "settings": {
         "editor.formatOnSave": true,
         "github.copilot.chat.agent.enabled": true,
-        "chat.useCustomAgentHooks": true
+        "chat.useCustomAgentHooks": true,
+        "chat.useAgentsMdFile": true,
+        "chat.useNestedAgentsMdFiles": true
       }
     }
   },
