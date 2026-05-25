@@ -59,7 +59,7 @@ Un subagent che gira con accesso a un MCP è un'unità di lavoro componibile e a
 
 ### Step 1 — Attiva Context7 in Copilot Chat e usalo
 
-Lo starter ha già pronto il file di configurazione MCP a livello workspace: `.vscode/mcp.json`.
+Il file di configurazione MCP è già presente al root del workspace: `.vscode/mcp.json`.
 
 ```json
 {
@@ -109,9 +109,57 @@ Ora chiedi all'agente:
 
 Osserva: l'agente invoca un tool di Context7 (visibile nella chat come tool-call), riceve le docs, e produce un'analisi confrontando il codice attuale con l'API documentata.
 
-### Step 2 — Invoca il subagent `code-reviewer`
+### Step 2 — Crea e invoca il subagent `code-reviewer`
 
-Lo starter contiene `agents/code-reviewer.agent.md` con il frontmatter visto sopra. Aprilo e leggilo: nota la allowlist di tool (`Read`, `Grep`, `Bash` — niente `Write`/`Edit`).
+Crea il file `.github/agents/code-reviewer.agent.md` **al root del workspace** con questo contenuto:
+
+```markdown
+---
+name: code-reviewer
+description: Specialized subagent for code review. Invoke when you want a structured review of a file or function for correctness, security, AGENTS.md compliance, and test coverage.
+tools: [Read, Grep, Bash]
+model: claude-sonnet-4-6
+---
+
+# Code Reviewer Subagent
+
+You are a rigorous but constructive code reviewer. Your output is a structured review.
+
+## What you do
+
+1. **Read AGENTS.md** in the repo (root and the folder of the file under review) to learn the project's conventions.
+2. **Read the file under review** and closely related files (tests, store, helpers).
+3. **Return a structured output** in these five sections:
+
+   ### Correctness
+   Obvious bugs, unhandled edge cases, race conditions, off-by-one errors.
+
+   ### Security
+   Unvalidated input, data leaks, missing authorization, outdated dependencies.
+
+   ### AGENTS.md compliance
+   Places where the code violates the conventions stated in AGENTS.md (naming, error format, status codes). Cite the specific rule.
+
+   ### Test coverage
+   Cases not covered by existing tests. Suggest which tests are missing.
+
+   ### Suggested fixes
+   For each problem identified, propose a concrete fix (code snippet when applicable).
+
+## How you operate
+
+- Do not rewrite the code yourself. Let the main agent apply the fixes.
+- Be specific: cite line and column when relevant.
+- Do not invent conventions. If AGENTS.md does not address a point, do not flag it as a violation.
+- If the file is well-written, say so. Do not invent problems.
+
+## Available tools
+- `Read`: open files.
+- `Grep`: search for patterns.
+- `Bash`: run tests or lint commands when needed.
+```
+
+Nota la allowlist di tool (`Read`, `Grep`, `Bash` — niente `Write`/`Edit`).
 
 In Copilot Chat:
 > @code-reviewer revisiona il controller dei task (`TasksEndpoints.cs` / `routes.ts` / `main.py`) per correttezza, sicurezza e conformità ad AGENTS.md.
@@ -137,8 +185,8 @@ Il subagent ha accesso a Context7 attraverso l'agente che lo invoca: la review i
 ## Cosa ti porti a casa
 
 - `context7` MCP server registrato e funzionante in Copilot Chat.
-- Subagent `code-reviewer` invocabile via `@code-reviewer` nello starter.
+- Subagent `code-reviewer` in `.github/agents/code-reviewer.agent.md` al root del workspace, invocabile via `@code-reviewer`.
 
-Se ti blocchi: `solution/{linguaggio}/` ha lo stato finale del modulo.
+Se ti blocchi: `solution/.github/agents/code-reviewer.agent.md` contiene la versione di riferimento da copiare al root del repo.
 
 ➡️ Prossimo modulo: [`../M3-governance/README.md`](../M3-governance/README.md)

@@ -91,18 +91,18 @@ Punto chiave: il hook `postToolUse` di `dev-guardian` usa **lo stesso meccanismo
 
 ### Step 3 — Impacchetta il tuo plugin
 
-Combina gli artefatti dei moduli precedenti in un plugin coerente: `copilot-safety-guard`. Crea questa struttura nel tuo starter:
+Combina gli artefatti dei moduli precedenti in un plugin coerente: `copilot-safety-guard`. Crea questa struttura **al root del workspace** (`<repo-root>/plugins/copilot-safety-guard/`):
 
 ```
 plugins/copilot-safety-guard/
 ├── plugin.json
 ├── skills/
-│   └── endpoint-creator/SKILL.md      (copiata da M1)
+│   └── endpoint-creator/SKILL.md      (copiata da .github/skills/endpoint-creator/SKILL.md)
 ├── agents/
-│   └── code-reviewer.agent.md          (copiato da M2)
+│   └── code-reviewer.agent.md          (copiato da .github/agents/code-reviewer.agent.md)
 └── hooks/
-    ├── pre-tool-use.sh                  (copiato da M3, variante bash)
-    └── pre-tool-use.ps1                 (copiato da M3, variante pwsh)
+    ├── pre-tool-use.sh                  (copiato da .copilot/hooks/pre-tool-use.sh)
+    └── pre-tool-use.ps1                 (copiato da .copilot/hooks/pre-tool-use.ps1)
 ```
 
 Il plugin manifest (`plugin.json`) dichiara la chiave `hooks.preToolUse` puntando direttamente allo script. Quando un utente installa il plugin, il client (Copilot CLI / Copilot Chat / Claude Code) registra automaticamente il hook con il proprio meccanismo nativo — non serve creare manualmente `.github/hooks/pre-tool-use.json` come avresti fatto a mano. Il manifest è il "punto di registrazione" centralizzato del bundle.
@@ -138,8 +138,8 @@ Per pubblicarlo davvero: fork del tuo repo, push su GitHub, e da quel punto chiu
 ## Cosa ti porti a casa
 
 - `dev-guardian` installato e ispezionato come reference completo.
-- Plugin `plugins/copilot-safety-guard/` nel tuo starter, con manifest, pronto in teoria per essere pubblicato.
+- Plugin `plugins/copilot-safety-guard/` al root del workspace, con manifest, pronto in teoria per essere pubblicato.
 
-Se ti blocchi: `solution/{linguaggio}/` contiene il bundle plugin completo.
+Se ti blocchi: `solution/plugins/copilot-safety-guard/` contiene il bundle plugin completo da copiare al root del repo.
 
 ➡️ Ora il microfono passa al co-speaker per **M5 — Spec-Driven Development**.

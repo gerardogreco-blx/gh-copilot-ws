@@ -1,4 +1,4 @@
-# Modulo M1 — Istruzioni · AGENTS.md + Skills
+# Modulo M1 - Istruzioni · AGENTS.md + Skills
 
 > Obiettivo: capire **come si descrive un repo a un agente** (AGENTS.md) e **come si forniscono procedure on-demand componibili** (Skills). Vedere in pratica la differenza tra "regole sempre attive" e "know-how caricato quando serve".
 
@@ -6,7 +6,7 @@
 
 ### AGENTS.md
 
-`AGENTS.md` è lo standard `de facto` cross-tool (GitHub Copilot, Claude Code, e altri coding agent) per descrivere il *contratto* del repository all'agente. È un file Markdown a livello root che viene **caricato in tutte le sessioni agentic** e iniettato come parte del system prompt — perciò ogni riga ha un costo in token.
+`AGENTS.md` è lo standard `de facto` cross-tool (GitHub Copilot, Claude Code, e altri coding agent) per descrivere il *contratto* del repository all'agente. È un file Markdown a livello root che viene **caricato in tutte le sessioni agentic** e iniettato come parte del system prompt - perciò ogni riga ha un costo in token.
 
 **Cosa includere**:
 - **Regole architetturali**: stack tecnologico, layering, decisioni di design che non si vogliono violare.
@@ -60,7 +60,7 @@ Regola di pollice: *"se questa regola serve sempre, in AGENTS.md. Se serve solo 
 
 Scegli il tuo linguaggio in `starters/dotnet`, `starters/typescript`, `starters/python` e segui i passi.
 
-### Step 1 — Verifica che AGENTS.md guidi l'agente
+### Step 1 - Verifica che AGENTS.md guidi l'agente
 
 Lo starter ha già un `AGENTS.md` che descrive: stack, struttura della Task API, convenzioni di naming, validazione, status code, vincolo "ogni endpoint ha un test".
 
@@ -75,9 +75,11 @@ Osserva nella risposta dell'agente:
 
 **Verifica**: l'agente segue il contratto del repo *senza che tu glielo abbia detto in chat*. È AGENTS.md che lo ha guidato.
 
-### Step 2 — Crea una Skill e osserva l'auto-loading
+### Step 2 - Crea una Skill e osserva l'auto-loading
 
-Crea il file `skills/endpoint-creator/SKILL.md` nel tuo starter, con questo contenuto:
+Crea il file `.github/skills/endpoint-creator/SKILL.md` **al root del workspace** (il root del repo che hai forkato), con questo contenuto:
+
+> **Nota**: VS Code Copilot Chat cerca le skill in `.github/skills/` al workspace root — ecco perché va lì, non dentro la cartella della starter.
 
 ```yaml
 ---
@@ -111,7 +113,7 @@ Ora chiedi all'agente, **senza nominare la skill**:
 
 Osserva: l'agente carica autonomamente la skill `endpoint-creator` perché la `description` del frontmatter dichiara *"Use when creating a new REST endpoint"*, e il prompt soddisfa quel trigger. Vedrai nella chat (a seconda della superficie) un riferimento esplicito tipo *"Loading skill: endpoint-creator"* oppure la skill comparirà nella context list del turno.
 
-### Step 3 — Confronta gli output
+### Step 3 - Confronta gli output
 
 Ripeti lo stesso prompt di Step 1 (l'endpoint stats) ma con la skill ora presente.
 
@@ -130,9 +132,9 @@ Il punto pedagogico: **AGENTS.md** dà il contesto sempre presente, ma **una Ski
 
 ## Cosa ti porti a casa
 
-- Un `AGENTS.md` reale nel tuo starter (lo trovi al root del linguaggio scelto).
-- Una skill `skills/endpoint-creator/` con frontmatter scritto in modo che si auto-attivi.
+- Il file `AGENTS.md` al root del repo (già presente, ti guida durante il workshop).
+- Una skill funzionante in `.github/skills/endpoint-creator/` al root del workspace.
 
-Se ti blocchi: `solution/{linguaggio}/` ha lo stato finale del modulo.
+Se ti blocchi: `solution/.github/skills/endpoint-creator/SKILL.md` contiene la versione di riferimento da copiare al root del repo.
 
 ➡️ Prossimo modulo: [`../M2-capacita/README.md`](../M2-capacita/README.md)

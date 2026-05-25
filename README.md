@@ -133,7 +133,9 @@ Se non parte automaticamente: Command Palette => `MCP: List Servers` => selezion
 
 ### Step 5 - Configurazione hook (per M3 e M4)
 
-Gli starter di M3 e M4 hanno già `.github/hooks/pre-tool-use.json` (il file di registrazione) e `.copilot/hooks/pre-tool-use.sh` (la versione bash) + `.copilot/hooks/pre-tool-use.ps1` (la versione PowerShell).
+> **Dove crei i file durante il workshop**: tutte le customizations Copilot (skill, subagent, hook, plugin) che creerai durante i moduli vanno **al root del workspace** (`/workspaces/gh-copilot-ws/`), non dentro la cartella delle starter. Il README di ogni modulo te lo ricorda. Le starter contengono solo il codice della Task API (.NET / TS / Python) per il linguaggio che hai scelto.
+
+Dovrai creare (come parte degli esercizi di M3 e M4) al root del workspace: `.github/hooks/pre-tool-use.json` (il file di registrazione) e `.copilot/hooks/pre-tool-use.sh` (la versione bash) + `.copilot/hooks/pre-tool-use.ps1` (la versione PowerShell).
 
 Per abilitare i hook in Copilot Chat, aprire le impostazioni di VS Code (`Ctrl+,`) e cercare `chat.useHooks`, poi spuntare la casella per abilitare i hook.
 
@@ -150,5 +152,13 @@ Per abilitare i hook in Copilot Chat, aprire le impostazioni di VS Code (`Ctrl+,
 ```
 
 ## Si parte
+
+> ⚠️ **Importante — non cambiare il workspace root**
+>
+> Il workspace VS Code deve **rimanere il root del repo** (`/workspaces/gh-copilot-ws`) per tutto il workshop. Apri i README dei moduli come **file** (Explorer sidebar oppure `Cmd/Ctrl+P` → digita il path), **NON** con `File → Open Folder` sulla cartella del modulo.
+>
+> Perché: tutte le customizations Copilot (skill, subagent, hook, plugin) che creerai vanno al **root del workspace** — se cambi workspace finiscono nel posto sbagliato e Copilot non le carica.
+>
+> Suggerimento UX: con il README aperto, premi `Cmd+Shift+V` (macOS) o `Ctrl+Shift+V` (Win/Linux) per il preview Markdown formattato.
 
 Apri [`modules/M1-istruzioni/README.md`](modules/M1-istruzioni/README.md) per iniziare il modulo 1 e buona workshop! 🚀

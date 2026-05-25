@@ -36,7 +36,7 @@ Un'istruzione in AGENTS.md ("non eseguire `rm -rf`") è un *suggerimento all'LLM
 
 ### Registrazione del hook in Copilot Chat
 
-Lo starter contiene già il file di registrazione: `.github/hooks/pre-tool-use.json`. Questo è il path che VS Code Copilot Chat conosce di default per i hook a livello workspace.
+Crea **al root del workspace** il file `.github/hooks/pre-tool-use.json`. Questo è il path che VS Code Copilot Chat conosce di default per i hook a livello workspace.
 
 ```json
 {
@@ -66,11 +66,11 @@ In alternativa al setup manuale, esiste lo **slash command** `/hooks` direttamen
 
 ### Configurazione
 
-Lo starter ha già due artefatti pronti in `.copilot/`:
-
+Crea **al root del workspace** i seguenti file (il workshop ti spiega ogni file):
 - `.copilot/policy.yml`: il file di policy, leggibile e versionabile.
 - `.copilot/hooks/pre-tool-use.sh`: l'implementazione bash del hook `PreToolUse`.
-- `.copilot/hooks/pre-tool-use.ps1`: l'equivalente PowerShell per ambienti Windows.
+- `.copilot/hooks/pre-tool-use.ps1`: l'equivalente PowerShell per ambienti Windows (+ se sei su Windows)
+- `.github/hooks/pre-tool-use.json`: registra il hook in Copilot Chat.
 
 Apri `policy.yml` per vederne la struttura:
 
@@ -142,9 +142,9 @@ Riprova un comando che causa blocco: l'agente riceve un messaggio strutturato e 
 
 ## Cosa ti porti a casa
 
-- `.copilot/policy.yml` riusabile (copia-incollabile in un repo aziendale lunedì mattina).
-- Hook `pre-tool-use.sh` + `pre-tool-use.ps1` funzionanti.
+- `.copilot/policy.yml` al root del workspace, riusabile (copia-incollabile in un repo aziendale lunedì mattina).
+- Hook `.copilot/hooks/pre-tool-use.sh` + `.copilot/hooks/pre-tool-use.ps1` funzionanti al root.
 
-Se ti blocchi: `solution/{linguaggio}/` ha lo stato finale del modulo.
+Se ti blocchi: `solution/.github/` e `solution/.copilot/` contengono le versioni di riferimento da copiare al root del repo.
 
 ➡️ Prossimo modulo: [`../M4-distribuzione/README.md`](../M4-distribuzione/README.md)
