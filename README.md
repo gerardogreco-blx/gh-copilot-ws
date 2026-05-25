@@ -1,12 +1,8 @@
-# Workshop "The Agent Strikes Back" — GitHub Copilot 2026
+# Workshop "The Agent Strikes Back" - GitHub Copilot 2026
 
-> Workshop hands-on di 90 minuti su agenti Copilot: AGENTS.md, Skills, Subagents, MCP, Hooks, Plugins & Marketplace + intro a Spec-Driven Development.
+> Workshop hands-on su Spec-Driven Development, AGENTS.md, Skills, Subagents, MCP, Hooks, Plugins & Marketplace
 
-## Per chi partecipa
-
-> ⚠️ **Importante**: questo workshop richiede che tu lavori su un **tuo fork** del repository, non sul repo originale. Solo così potrai committare e pushare le tue modifiche e "portarti a casa" il lavoro fatto.
-
-### Step 1 — Fork del repository
+### Step 1 - Fork del repository
 
 Click sul pulsante **"Fork"** in alto a destra in questa pagina, oppure usa direttamente questo link:
 
@@ -18,27 +14,21 @@ Nella pagina che si apre:
 - **"Copy the main branch only"**: ✅ lasciato spuntato
 - Click **"Create fork"**
 
-In ~5 secondi avrai il tuo fork all'URL `https://github.com/TUO-USERNAME/gh-copilot-ws`.
-
-### Step 2 — Crea il Codespace dal TUO fork
-
-⚠️ **Non usare il badge "Open in Codespaces" di questo README originale**: porterebbe al repo di Gerardo, dove non hai write access.
+### Step 2 - Crea il Codespace
 
 **Dal tuo fork** (`github.com/TUO-USERNAME/gh-copilot-ws`):
 1. Click sul pulsante verde **"Code"**.
-2. Tab **"Codespaces"** → click **"Create codespace on main"** (oppure i tre puntini → "New with options" per vedere la pagina avanzata).
+2. Tab **"Codespaces"** => click sui tre puntini => "New with options...".
 
-Si apre la pagina **"Create a new codespace"** di GitHub.
+Si apre la pagina **"Create codespace"** di GitHub.
 
-### Step 3 — Configura il Codespace
+### Step 3 - Configura il Codespace
 
 Nella pagina di creazione lascia invariati:
-- **Repository**: `TUO-USERNAME/gh-copilot-ws` (deve essere il tuo fork, non `render93/...`)
 - **Branch**: `main`
-- **Region**: lascia il default (es. Europe West)
-- **Machine type**: `2-core` (sufficiente)
-
-⚠️ **Apri il dropdown "Dev container configuration"** e scegli **uno** di questi 3 — *in base al linguaggio che preferisci usare*:
+- **Region**: `Europe West`
+- **Machine type**: `2-core`
+- ⚠️ **Dev container configuration**: scegli una voce in base al linguaggio che preferisci usare
 
 | Opzione nel dropdown | Scegli se vuoi… |
 |---|---|
@@ -46,53 +36,32 @@ Nella pagina di creazione lascia invariati:
 | `Workshop · TypeScript (Node 20)` | seguire con lo starter Hono (TS) |
 | `Workshop · Python 3.11` | seguire con lo starter FastAPI |
 
-> 🚫 **NON scegliere `Default project configuration`**: è l'opzione fallback di GitHub che usa un'immagine generica senza la pre-installazione di Copilot, MCP server, dipendenze del workshop. Se la selezioni per errore, il Codespace parte ma niente funziona.
+> 🚫 **NON scegliere `Default project configuration`**: è l'opzione fallback di GitHub che usa un'immagine generica senza la pre-installazione di Copilot, MCP server, dipendenze del workshop.
 
-Ogni devcontainer dedicato installa solo l'SDK del suo linguaggio (boot ~1-2 min). Se a metà workshop vuoi cambiare linguaggio, crea un secondo Codespace con un altro devcontainer dal dropdown — quello di partenza non si perde.
+Ogni devcontainer dedicato installa solo l'SDK del suo linguaggio. Se a metà workshop vuoi cambiare linguaggio, crea un secondo Codespace con un altro devcontainer dal dropdown - quello di partenza non si perde.
 
-Click **"Create codespace"** in basso a destra. Attendi 1-2 minuti.
+Click **"Create codespace"** in basso a destra.
 
-### Step 4 — Verifica setup
+Attendere qualche minuto per la creazione e l'inizializzazione del Codespace. Al termine nel tab `Terminale` dpvresti vedere il messaggio `==> Done. Open modules/M1-istruzioni/README.md to start.`.
 
-Una volta dentro VS Code (in browser):
-- l'icona Copilot in basso a destra è **attiva** (non grigia/disabilitata);
-- aprendo il pannello inferiore "Output" → "GitHub Copilot Chat" non ci sono errori di autenticazione;
-- nel terminal: `git remote -v` deve mostrare il tuo fork come `origin`, non `render93/gh-copilot-ws`.
+### Step 4 - Avvio MCP server (Context7)
+Il server MCP Context7 potrebbe non partire automaticamente al primo avvio del Codespace.
 
-### Step 5 — Inizia
+Aprire Command Palette => `MCP: List Servers` => seleziona `context7` => `Avvia Server`.
 
-Apri [`docs/00-intro.md`](docs/00-intro.md) per il quadro generale, poi [`modules/M1-istruzioni/README.md`](modules/M1-istruzioni/README.md) per iniziare.
+```bash
 
-Se il Codespace non parte (o l'errore è "configurazione non trovata"): vedi [setup locale](#setup-locale-fallback).
+## Configurazione locale
+
+Se per qualche motivo non puoi usare Codespaces, puoi seguire il workshop in locale. Vedi [setup locale](#setup-locale-fallback).
 
 ---
 
-> **Per gli speaker / chi vuole solo "vedere"** senza interagire/committare: c'è un badge shortcut che apre un Codespace direttamente sul repo originale, ma in modalità sola lettura per chi non è collaborator. Da usare solo per demo, non per il workshop hands-on:
->
-> [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/render93/gh-copilot-ws)
+## Setup locale
 
-## Struttura del workshop
+Se non puoi usare GitHub Codespaces, puoi seguire il workshop in locale.
 
-| Modulo | Topic | Durata | Presentato da |
-|---|---|---|---|
-| M1 Istruzioni | AGENTS.md + Skills | 18' | Gerardo |
-| M2 Capacità | Subagents + MCP (Context7) | 18' | Gerardo |
-| M3 Governance | Hooks (safety guard) | 14' | Gerardo |
-| M4 Distribuzione | Plugins & Marketplace | 14' | Gerardo |
-| M5 SDD | Spec-Driven Development | 12' | Co-speaker |
-
-## Cosa ti porti a casa
-
-- AGENTS.md letto e capito + skill `endpoint-creator`
-- Context7 MCP configurato + subagent `code-reviewer`
-- Hook safety guard funzionante + `policy.yml` riusabile
-- Plugin bundle `copilot-safety-guard`
-
-## Setup locale (fallback)
-
-Se non puoi usare GitHub Codespaces, puoi seguire il workshop in locale. La superficie obbligatoria è **VS Code + estensione GitHub Copilot autenticata**; gli SDK servono solo per il linguaggio che scegli.
-
-### Prerequisiti software
+### Step 1 - Prerequisiti software
 
 | Tool | Note |
 |---|---|
@@ -103,7 +72,7 @@ Se non puoi usare GitHub Codespaces, puoi seguire il workshop in locale. La supe
 | **Uno** tra .NET 10 SDK / Python 3.11+ | solo per il linguaggio di starter che scegli (TypeScript usa già Node) |
 | `jq` (Unix) o PowerShell 7+ (Windows) | necessario per gli hook script in M3/M4 |
 
-### Passi setup
+### Step 2 - Passi setup
 
 ```bash
 # 1. Clone del repo
@@ -132,51 +101,43 @@ pip install -r requirements.txt
 cd -
 ```
 
-### Verifica che lo starter giri
+### Step 3 - Verifica che lo starter giri
 
 Per testare che lo starter funzioni prima di iniziare i moduli:
 
 ```bash
 # .NET
 cd modules/M1-istruzioni/starters/dotnet
-dotnet test           # → 2 test passano
-dotnet run            # → server su http://localhost:5000
+dotnet test           # => 2 test passano
+dotnet run            # => server su http://localhost:5000
 
 # TypeScript
 cd modules/M1-istruzioni/starters/typescript
-npm test              # → 2 test passano
-npm run dev           # → server su http://localhost:3000
+npm test              # => 2 test passano
+npm run dev           # => server su http://localhost:3000
 
 # Python
 cd modules/M1-istruzioni/starters/python
 source .venv/bin/activate
-pytest                # → 2 test passano
-uvicorn app.main:app  # → server su http://localhost:8000
+pytest                # => 2 test passano
+uvicorn app.main:app  # => server su http://localhost:8000
 ```
 
-In tutti i casi, una volta avviato il server, una `curl http://localhost:<porta>/tasks` deve restituire `[]`.
+### Step 4 - Configurazione MCP server (Context7) in locale
 
-### Configurazione MCP server (Context7) in locale
+Lo starter contiene già `.vscode/mcp.json` configurato per usare l'endpoint HTTP hosted di Context7 (`https://mcp.context7.com/mcp`).
 
-Lo starter contiene già `.vscode/mcp.json` configurato per usare l'endpoint HTTP hosted di Context7 (`https://mcp.context7.com/mcp`). Niente processi locali, niente download.
+VS Code Copilot Chat rileva il file all'apertura del workspace e ti propone di abilitare il server, accetta quando richiesto.
 
-VS Code Copilot Chat rileva il file all'apertura del workspace e ti propone di abilitare il server. Accetta.
+Se non parte automaticamente: Command Palette => `MCP: List Servers` => seleziona `context7` => `Avvia Server`.
 
-Se non parte automaticamente: Command Palette → `MCP: List Servers` → seleziona `context7` → `Start`.
-
-Per uso intensivo (audience grande, rate limit) puoi configurare una API key personale da [context7.com/dashboard](https://context7.com/dashboard) aggiungendo `headers` al file di config. Per il workshop normale non serve.
-
-### Configurazione hook (per M3 e M4)
+### Step 5 - Configurazione hook (per M3 e M4)
 
 Gli starter di M3 e M4 hanno già `.github/hooks/pre-tool-use.json` (il file di registrazione) e `.copilot/hooks/pre-tool-use.sh` (la versione bash) + `.copilot/hooks/pre-tool-use.ps1` (la versione PowerShell).
 
-Per abilitare i hook in Copilot Chat (User Settings JSON):
+Per abilitare i hook in Copilot Chat, aprire le impostazioni di VS Code (`Ctrl+,`) e cercare `chat.useHooks`, poi spuntare la casella per abilitare i hook.
 
-```json
-"chat.useCustomAgentHooks": true
-```
-
-Su Windows, modifica `.github/hooks/pre-tool-use.json` per puntare alla versione `.ps1`:
+> Su Windows, modifica `.github/hooks/pre-tool-use.json` per puntare alla versione `.ps1`:
 
 ```json
 {
@@ -188,9 +149,6 @@ Su Windows, modifica `.github/hooks/pre-tool-use.json` per puntare alla versione
 }
 ```
 
-### Quale modulo per primo
+## Si parte
 
-Apri [`docs/00-intro.md`](docs/00-intro.md) per il quadro generale, poi `modules/M1-istruzioni/README.md`.
-
-## Licenza
-MIT
+Apri [`modules/M1-istruzioni/README.md`](modules/M1-istruzioni/README.md) per iniziare il modulo 1 e buona workshop! 🚀
