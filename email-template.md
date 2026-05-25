@@ -24,11 +24,20 @@ ti aspettiamo al workshop **"The Agent Strikes Back"** il [data] alle [ora].
 **NON serve installare niente in locale**: useremo GitHub Codespaces.
 
 **Test "ready"** (5 minuti, prima del workshop):
-1. Apri: [URL repo]
-2. Clicca "Open in Codespace" sul README.
-3. Attendi ~2 min.
-4. Verifica icona Copilot attiva.
-5. Problemi → rispondi a questa mail entro [data -2gg].
+
+1. Apri il repo del workshop: https://github.com/render93/gh-copilot-ws
+
+2. **Fai fork del repository** sul tuo account GitHub (pulsante "Fork" in alto a destra). Senza fork non potrai committare le tue modifiche.
+
+3. **Dal tuo fork** (`github.com/TUO-USERNAME/gh-copilot-ws`), click "Code" → tab "Codespaces" → "Create codespace on main".
+
+4. Nella pagina di creazione, **scegli un devcontainer** dal dropdown "Dev container configuration": `.NET 10`, `TypeScript (Node 20)`, oppure `Python 3.11`. NON scegliere "Default project configuration".
+
+5. Click "Create codespace". Attendi ~2 min.
+
+6. Verifica che l'icona Copilot in VS Code (in basso a destra) sia attiva.
+
+7. Problemi → rispondi a questa mail entro [data -2gg].
 
 Ci vediamo!
 

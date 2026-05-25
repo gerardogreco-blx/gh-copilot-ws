@@ -2,39 +2,74 @@
 
 > Workshop hands-on di 90 minuti su agenti Copilot: AGENTS.md, Skills, Subagents, MCP, Hooks, Plugins & Marketplace + intro a Spec-Driven Development.
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/render93/gh-copilot-ws)
-
 ## Per chi partecipa
 
-1. **Click sul badge "Open in GitHub Codespaces"** qui sopra. Si apre la pagina **"Create a new codespace"** di GitHub.
+> ⚠️ **Importante**: questo workshop richiede che tu lavori su un **tuo fork** del repository, non sul repo originale. Solo così potrai committare e pushare le tue modifiche e "portarti a casa" il lavoro fatto.
 
-2. Lascia invariati i campi standard:
-   - **Repository**: `render93/gh-copilot-ws`
-   - **Branch**: `main`
-   - **Region**: lascia il default (es. Europe West)
-   - **Machine type**: `2-core` (sufficiente per il workshop)
+### Step 1 — Fork del repository
 
-3. ⚠️ **Apri il dropdown "Dev container configuration"** e scegli **uno** di questi 3 — *in base al linguaggio che preferisci usare*:
+Click sul pulsante **"Fork"** in alto a destra in questa pagina, oppure usa direttamente questo link:
 
-   | Opzione nel dropdown | Scegli se vuoi… |
-   |---|---|
-   | `Workshop · .NET 10` | seguire con lo starter ASP.NET Core Minimal API |
-   | `Workshop · TypeScript (Node 20)` | seguire con lo starter Hono (TS) |
-   | `Workshop · Python 3.11` | seguire con lo starter FastAPI |
+👉 **[Fork render93/gh-copilot-ws](https://github.com/render93/gh-copilot-ws/fork)** 👈
 
-   > 🚫 **NON scegliere `Default project configuration`**: è l'opzione fallback di GitHub che usa un'immagine generica senza la pre-installazione di Copilot, MCP server, dipendenze del workshop. Se la selezioni per errore, il Codespace parte ma niente funziona.
+Nella pagina che si apre:
+- **Owner**: il tuo account GitHub (lascia il default)
+- **Repository name**: lascia `gh-copilot-ws` (o cambia se preferisci)
+- **"Copy the main branch only"**: ✅ lasciato spuntato
+- Click **"Create fork"**
 
-   Ogni devcontainer dedicato installa solo l'SDK del suo linguaggio (boot ~1-2 min). Se a metà workshop vuoi cambiare linguaggio, crea un secondo Codespace con un altro devcontainer dal dropdown — quello di partenza non si perde.
+In ~5 secondi avrai il tuo fork all'URL `https://github.com/TUO-USERNAME/gh-copilot-ws`.
 
-4. **Click "Create codespace"** in basso a destra. Attendi 1-2 minuti.
+### Step 2 — Crea il Codespace dal TUO fork
 
-5. Una volta dentro VS Code (in browser), verifica:
-   - l'icona Copilot in basso a destra è **attiva** (non grigia/disabilitata);
-   - aprendo il pannello inferiore "Output" → "GitHub Copilot Chat" non ci sono errori di autenticazione.
+⚠️ **Non usare il badge "Open in Codespaces" di questo README originale**: porterebbe al repo di Gerardo, dove non hai write access.
 
-6. **Apri** [`docs/00-intro.md`](docs/00-intro.md) per il quadro generale, poi [`modules/M1-istruzioni/README.md`](modules/M1-istruzioni/README.md) per iniziare.
+**Dal tuo fork** (`github.com/TUO-USERNAME/gh-copilot-ws`):
+1. Click sul pulsante verde **"Code"**.
+2. Tab **"Codespaces"** → click **"Create codespace on main"** (oppure i tre puntini → "New with options" per vedere la pagina avanzata).
+
+Si apre la pagina **"Create a new codespace"** di GitHub.
+
+### Step 3 — Configura il Codespace
+
+Nella pagina di creazione lascia invariati:
+- **Repository**: `TUO-USERNAME/gh-copilot-ws` (deve essere il tuo fork, non `render93/...`)
+- **Branch**: `main`
+- **Region**: lascia il default (es. Europe West)
+- **Machine type**: `2-core` (sufficiente)
+
+⚠️ **Apri il dropdown "Dev container configuration"** e scegli **uno** di questi 3 — *in base al linguaggio che preferisci usare*:
+
+| Opzione nel dropdown | Scegli se vuoi… |
+|---|---|
+| `Workshop · .NET 10` | seguire con lo starter ASP.NET Core Minimal API |
+| `Workshop · TypeScript (Node 20)` | seguire con lo starter Hono (TS) |
+| `Workshop · Python 3.11` | seguire con lo starter FastAPI |
+
+> 🚫 **NON scegliere `Default project configuration`**: è l'opzione fallback di GitHub che usa un'immagine generica senza la pre-installazione di Copilot, MCP server, dipendenze del workshop. Se la selezioni per errore, il Codespace parte ma niente funziona.
+
+Ogni devcontainer dedicato installa solo l'SDK del suo linguaggio (boot ~1-2 min). Se a metà workshop vuoi cambiare linguaggio, crea un secondo Codespace con un altro devcontainer dal dropdown — quello di partenza non si perde.
+
+Click **"Create codespace"** in basso a destra. Attendi 1-2 minuti.
+
+### Step 4 — Verifica setup
+
+Una volta dentro VS Code (in browser):
+- l'icona Copilot in basso a destra è **attiva** (non grigia/disabilitata);
+- aprendo il pannello inferiore "Output" → "GitHub Copilot Chat" non ci sono errori di autenticazione;
+- nel terminal: `git remote -v` deve mostrare il tuo fork come `origin`, non `render93/gh-copilot-ws`.
+
+### Step 5 — Inizia
+
+Apri [`docs/00-intro.md`](docs/00-intro.md) per il quadro generale, poi [`modules/M1-istruzioni/README.md`](modules/M1-istruzioni/README.md) per iniziare.
 
 Se il Codespace non parte (o l'errore è "configurazione non trovata"): vedi [setup locale](#setup-locale-fallback).
+
+---
+
+> **Per gli speaker / chi vuole solo "vedere"** senza interagire/committare: c'è un badge shortcut che apre un Codespace direttamente sul repo originale, ma in modalità sola lettura per chi non è collaborator. Da usare solo per demo, non per il workshop hands-on:
+>
+> [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/render93/gh-copilot-ws)
 
 ## Struttura del workshop
 

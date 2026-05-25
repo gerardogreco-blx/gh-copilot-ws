@@ -15,12 +15,20 @@
 ## T+00:00 — 00:05 · Intro + setup check (5')
 
 **Gerardo:**
-> "Un anno fa raccontavamo il risveglio degli agenti Copilot. Oggi gli agenti scrivono codice in produzione. In 90 minuti vediamo le 6 primitive che hanno reso possibile la transizione, e ne tocchiamo 5 con le mani. Apri il QR code, lancia il Codespace. Chi è dentro alzi la mano."
+> "Un anno fa raccontavamo il risveglio degli agenti Copilot. Oggi gli agenti scrivono codice in produzione. In 90 minuti vediamo le 6 primitive che hanno reso possibile la transizione, e ne tocchiamo 5 con le mani."
 
-**Co-speaker:** gira tra i banchi, aiuta chi non ha la mano alzata.
+**Verifiche di setup** (in ordine, sulla slide o lavagna):
+1. *"Chi ha già fatto fork del repo nel suo account?"* — chi non l'ha fatto: link diretto `github.com/render93/gh-copilot-ws/fork`, fork → 5 secondi.
+2. *"Chi ha già aperto un Codespace sul SUO fork con uno dei 3 devcontainer?"* — chi non l'ha fatto: dal proprio fork → Code → Codespaces → New con options → dropdown devcontainer.
+3. *"Chi vede l'icona Copilot attiva in VS Code?"* — alzata di mano.
+
+**Co-speaker:** gira tra i banchi, aiuta chi è bloccato in uno dei 3 step.
 
 **Promessa**:
-> "A fine workshop avrai un repo personale con: AGENTS.md, una skill custom, un MCP attivo, un subagent, un hook di safety, un plugin bundle. Te lo porti a casa."
+> "A fine workshop avrai un repo personale (il tuo fork!) con: AGENTS.md, una skill custom, un MCP attivo, un subagent, un hook di safety, un plugin bundle. Te lo porti a casa, lo committi, lo pushi."
+
+**Anti-pattern da evitare in apertura**:
+- Non lasciare che qualcuno apra il Codespace dal repo di Gerardo direttamente: non potrà pushare. Spingere TUTTI sul fork prima.
 
 ---
 
