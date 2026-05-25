@@ -16,7 +16,8 @@
         "github.copilot.chat.agent.enabled": true,
         "chat.useCustomAgentHooks": true,
         "chat.useAgentsMdFile": true,
-        "chat.useNestedAgentsMdFiles": true
+        "chat.useNestedAgentsMdFiles": true,
+        "chat.experimental.useSkillAdherencePrompt": true
       }
     }
   },

@@ -106,21 +106,10 @@ Every endpoint ships with one happy path test and one error case test.
 Kebab-case paths (e.g. `/tasks/by-status`). Typed path params (`{id:int}` in .NET).
 ```
 
-Ora chiedi all'agente, **senza nominare la skill**:
+Ora apri una nuova chat e chiedi all'agente, **senza nominare la skill**:
 > Nel progetto `@modules/M1-istruzioni/starters/<linguaggio>` aggiungi un endpoint `DELETE /tasks/:id` che cancella un task esistente.
 
 Osserva: l'agente carica autonomamente la skill `endpoint-creator` perché la `description` del frontmatter dichiara *"Use when creating a new REST endpoint"*, e il prompt soddisfa quel trigger. Vedrai nella chat (a seconda della superficie) un riferimento esplicito tipo *"Loading skill: endpoint-creator"* oppure la skill comparirà nella context list del turno.
-
-### Step 3 - Confronta gli output
-
-Ripeti lo stesso prompt di Step 1 (l'endpoint `PUT /tasks/:id`) ma con la skill ora presente.
-
-Confronta:
-- la struttura del codice (più aderente alle regole della skill);
-- la presenza/qualità dei test (la skill rende il test "obbligatorio" esplicitamente);
-- il formato degli errori (allineato al template `{ "error": "..." }`).
-
-Il punto pedagogico: **AGENTS.md** dà il contesto sempre presente, ma **una Skill** è il modo per codificare *procedure specifiche* senza pagare il costo in token quando non servono.
 
 ## Wrap
 
