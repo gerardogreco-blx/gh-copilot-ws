@@ -6,18 +6,35 @@
 
 ## Per chi partecipa
 
-1. Click su "Open in GitHub Codespaces" qui sopra.
-2. Nella pagina di creazione del Codespace, **scegli il tuo devcontainer** tra:
-   - `Workshop · .NET 10` — se vuoi seguire con lo starter .NET
-   - `Workshop · TypeScript (Node 20)` — per lo starter TypeScript
-   - `Workshop · Python 3.11` — per lo starter Python
+1. **Click sul badge "Open in GitHub Codespaces"** qui sopra. Si apre la pagina **"Create a new codespace"** di GitHub.
 
-   Ogni devcontainer installa solo l'SDK che ti serve (boot più rapido). Se a metà workshop vuoi cambiare linguaggio, crea un secondo Codespace con un altro devcontainer (il Codespace di partenza non si perde).
-3. Attendi ~1-2 min che il Codespace parta.
-4. Verifica che l'icona Copilot in basso a destra sia attiva.
-5. Apri `docs/00-intro.md`, poi `modules/M1-istruzioni/README.md`.
+2. Lascia invariati i campi standard:
+   - **Repository**: `render93/gh-copilot-ws`
+   - **Branch**: `main`
+   - **Region**: lascia il default (es. Europe West)
+   - **Machine type**: `2-core` (sufficiente per il workshop)
 
-Se il Codespace non parte: vedi [setup locale](#setup-locale-fallback).
+3. ⚠️ **Apri il dropdown "Dev container configuration"** e scegli **uno** di questi 3 — *in base al linguaggio che preferisci usare*:
+
+   | Opzione nel dropdown | Scegli se vuoi… |
+   |---|---|
+   | `Workshop · .NET 10` | seguire con lo starter ASP.NET Core Minimal API |
+   | `Workshop · TypeScript (Node 20)` | seguire con lo starter Hono (TS) |
+   | `Workshop · Python 3.11` | seguire con lo starter FastAPI |
+
+   > 🚫 **NON scegliere `Default project configuration`**: è l'opzione fallback di GitHub che usa un'immagine generica senza la pre-installazione di Copilot, MCP server, dipendenze del workshop. Se la selezioni per errore, il Codespace parte ma niente funziona.
+
+   Ogni devcontainer dedicato installa solo l'SDK del suo linguaggio (boot ~1-2 min). Se a metà workshop vuoi cambiare linguaggio, crea un secondo Codespace con un altro devcontainer dal dropdown — quello di partenza non si perde.
+
+4. **Click "Create codespace"** in basso a destra. Attendi 1-2 minuti.
+
+5. Una volta dentro VS Code (in browser), verifica:
+   - l'icona Copilot in basso a destra è **attiva** (non grigia/disabilitata);
+   - aprendo il pannello inferiore "Output" → "GitHub Copilot Chat" non ci sono errori di autenticazione.
+
+6. **Apri** [`docs/00-intro.md`](docs/00-intro.md) per il quadro generale, poi [`modules/M1-istruzioni/README.md`](modules/M1-istruzioni/README.md) per iniziare.
+
+Se il Codespace non parte (o l'errore è "configurazione non trovata"): vedi [setup locale](#setup-locale-fallback).
 
 ## Struttura del workshop
 
