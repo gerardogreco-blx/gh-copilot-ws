@@ -32,3 +32,18 @@ class TaskStore:
                 self._tasks[i] = updated
                 return updated
         return None
+
+    def replace(self, task_id: int, title: str, status: Status) -> TaskItem | None:
+        for i, t in enumerate(self._tasks):
+            if t.id == task_id:
+                replaced = TaskItem(id=task_id, title=title, status=status)
+                self._tasks[i] = replaced
+                return replaced
+        return None
+
+    def delete(self, task_id: int) -> bool:
+        for i, t in enumerate(self._tasks):
+            if t.id == task_id:
+                del self._tasks[i]
+                return True
+        return False

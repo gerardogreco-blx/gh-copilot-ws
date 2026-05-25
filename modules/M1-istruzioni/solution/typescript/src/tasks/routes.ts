@@ -26,5 +26,23 @@ export function tasksRoutes(): Hono {
     return updated ? c.json(updated) : c.json({ error: "not found" }, 404);
   });
 
+  app.put("/tasks/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const body = await c.req.json().catch(() => ({}));
+    if (!body.title || typeof body.title !== "string") {
+      return c.json({ error: "title required" }, 400);
+    }
+    if (body.status !== "todo" && body.status !== "done") {
+      return c.json({ error: "status must be 'todo' or 'done'" }, 400);
+    }
+    const replaced = store.replace(id, body.title, body.status as TaskStatus);
+    return replaced ? c.json(replaced) : c.json({ error: "not found" }, 404);
+  });
+
+  app.delete("/tasks/:id", (c) => {
+    const id = Number(c.req.param("id"));
+    return store.delete(id) ? c.body(null, 204) : c.json({ error: "not found" }, 404);
+  });
+
   return app;
 }

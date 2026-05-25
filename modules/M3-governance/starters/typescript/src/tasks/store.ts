@@ -26,4 +26,19 @@ export class TaskStore {
     this.tasks[idx] = { ...this.tasks[idx], status };
     return this.tasks[idx];
   }
+
+  replace(id: number, title: string, status: TaskStatus): TaskItem | null {
+    const idx = this.tasks.findIndex((t) => t.id === id);
+    if (idx < 0) return null;
+    const replaced: TaskItem = { id, title, status };
+    this.tasks[idx] = replaced;
+    return replaced;
+  }
+
+  delete(id: number): boolean {
+    const idx = this.tasks.findIndex((t) => t.id === id);
+    if (idx < 0) return false;
+    this.tasks.splice(idx, 1);
+    return true;
+  }
 }

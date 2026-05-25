@@ -33,3 +33,24 @@ def update_status(task_id: int, req: UpdateStatusRequest) -> dict:
     if updated is None:
         raise HTTPException(status_code=404, detail="not found")
     return updated.__dict__
+
+
+class ReplaceTaskRequest(BaseModel):
+    title: str
+    status: Literal["todo", "done"]
+
+
+@app.put("/tasks/{task_id}")
+def replace_task(task_id: int, req: ReplaceTaskRequest) -> dict:
+    if not req.title.strip():
+        raise HTTPException(status_code=400, detail="title required")
+    replaced = store.replace(task_id, req.title, req.status)
+    if replaced is None:
+        raise HTTPException(status_code=404, detail="not found")
+    return replaced.__dict__
+
+
+@app.delete("/tasks/{task_id}", status_code=204)
+def delete_task(task_id: int) -> None:
+    if not store.delete(task_id):
+        raise HTTPException(status_code=404, detail="not found")

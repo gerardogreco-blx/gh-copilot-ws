@@ -22,4 +22,21 @@ public class TaskStore
         _tasks[idx] = updated;
         return updated;
     }
+
+    public TaskItem? Replace(int id, string title, string status)
+    {
+        var idx = _tasks.FindIndex(t => t.Id == id);
+        if (idx < 0) return null;
+        var replaced = new TaskItem(id, title, status);
+        _tasks[idx] = replaced;
+        return replaced;
+    }
+
+    public bool Delete(int id)
+    {
+        var idx = _tasks.FindIndex(t => t.Id == id);
+        if (idx < 0) return false;
+        _tasks.RemoveAt(idx);
+        return true;
+    }
 }
