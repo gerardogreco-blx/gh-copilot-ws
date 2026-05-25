@@ -109,7 +109,10 @@ Kebab-case paths (e.g. `/tasks/by-status`). Typed path params (`{id:int}` in .NE
 Ora apri una nuova chat e chiedi all'agente, **senza nominare la skill**:
 > Nel progetto `@modules/M1-istruzioni/starters/<linguaggio>` aggiungi un endpoint `DELETE /tasks/:id` che cancella un task esistente.
 
-Osserva: l'agente carica autonomamente la skill `endpoint-creator` perché la `description` del frontmatter dichiara *"Use when creating a new REST endpoint"*, e il prompt soddisfa quel trigger. Vedrai nella chat (a seconda della superficie) un riferimento esplicito tipo *"Loading skill: endpoint-creator"* oppure la skill comparirà nella context list del turno.
+Nota: l'agente carica autonomamente la skill `endpoint-creator` perché la `description` del frontmatter dichiara *"Use when creating a new REST endpoint"*, e il prompt soddisfa quel trigger. Vedrai nella chat (a seconda della superficie) un riferimento esplicito tipo *"Loading skill: endpoint-creator"* oppure la skill comparirà nella context list del turno.
+
+La skill può anche essere chiamata esplicitamente, ad esempio con:
+> Usa la skill /endpoint-creator per aggiungere un endpoint `DELETE /tasks/:id` che cancella un task esistente.
 
 ## Wrap
 
