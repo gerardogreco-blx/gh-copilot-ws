@@ -1,0 +1,24 @@
+{
+  "name": "Workshop · TypeScript (Node 20)",
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "dbaeumer.vscode-eslint"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "github.copilot.chat.agent.enabled": true,
+        "chat.useCustomAgentHooks": true
+      }
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/typescript/post-create.sh",
+  "forwardPorts": [3000],
+  "remoteUser": "codespace"
+}

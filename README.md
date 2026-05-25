@@ -7,9 +7,15 @@
 ## Per chi partecipa
 
 1. Click su "Open in GitHub Codespaces" qui sopra.
-2. Attendi ~2 min che il Codespace parta.
-3. Verifica che l'icona Copilot in basso a destra sia attiva.
-4. Apri `docs/00-intro.md`, poi `modules/M1-istruzioni/README.md`.
+2. Nella pagina di creazione del Codespace, **scegli il tuo devcontainer** tra:
+   - `Workshop · .NET 8` — se vuoi seguire con lo starter .NET
+   - `Workshop · TypeScript (Node 20)` — per lo starter TypeScript
+   - `Workshop · Python 3.11` — per lo starter Python
+
+   Ogni devcontainer installa solo l'SDK che ti serve (boot più rapido). Se a metà workshop vuoi cambiare linguaggio, crea un secondo Codespace con un altro devcontainer (il Codespace di partenza non si perde).
+3. Attendi ~1-2 min che il Codespace parta.
+4. Verifica che l'icona Copilot in basso a destra sia attiva.
+5. Apri `docs/00-intro.md`, poi `modules/M1-istruzioni/README.md`.
 
 Se il Codespace non parte: vedi [setup locale](#setup-locale-fallback).
 
