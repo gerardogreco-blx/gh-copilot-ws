@@ -8,7 +8,7 @@ Repository del workshop "The Agent Strikes Back" su GitHub Copilot (2026). Conti
 
 ## Stack
 
-- .NET 8 (ASP.NET Core Minimal API)
+- .NET 10 (ASP.NET Core Minimal API)
 - TypeScript 5 (Hono on Node 20)
 - Python 3.11 (FastAPI)
 

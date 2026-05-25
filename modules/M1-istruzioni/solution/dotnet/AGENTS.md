@@ -1,7 +1,7 @@
 # AGENTS.md — Task API (.NET)
 
 ## Stack
-- .NET 8 Minimal API (`Program.cs` + `TasksEndpoints.cs`)
+- .NET 10 Minimal API (`Program.cs` + `TasksEndpoints.cs`)
 - Test: xUnit + `Microsoft.AspNetCore.Mvc.Testing` (`Tasks.Tests/`)
 
 ## Struttura

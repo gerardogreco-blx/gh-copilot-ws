@@ -8,7 +8,7 @@
 
 1. Click su "Open in GitHub Codespaces" qui sopra.
 2. Nella pagina di creazione del Codespace, **scegli il tuo devcontainer** tra:
-   - `Workshop · .NET 8` — se vuoi seguire con lo starter .NET
+   - `Workshop · .NET 10` — se vuoi seguire con lo starter .NET
    - `Workshop · TypeScript (Node 20)` — per lo starter TypeScript
    - `Workshop · Python 3.11` — per lo starter Python
 
@@ -48,7 +48,7 @@ Se non puoi usare GitHub Codespaces, puoi seguire il workshop in locale. La supe
 | VS Code (≥ 1.110) | per agent mode e plugin support |
 | Estensione `GitHub.copilot` + `GitHub.copilot-chat` | sottoscrizione Copilot attiva richiesta |
 | Node.js 20+ | richiesto **solo se scegli lo starter TypeScript**. Context7 ora è un endpoint HTTP hosted, non più un processo locale |
-| **Uno** tra .NET 8 SDK / Python 3.11+ | solo per il linguaggio di starter che scegli (TypeScript usa già Node) |
+| **Uno** tra .NET 10 SDK / Python 3.11+ | solo per il linguaggio di starter che scegli (TypeScript usa già Node) |
 | `jq` (Unix) o PowerShell 7+ (Windows) | necessario per gli hook script in M3/M4 |
 
 ### Passi setup

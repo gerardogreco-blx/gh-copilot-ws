@@ -7,7 +7,7 @@
 **Architecture:** A single-branch GitHub repository organized as `modules/M{1..4}/` (each with `README.md`, `starters/{dotnet,typescript,python}/`, and `solution/{dotnet,typescript,python}/`), a shared `AGENTS.md` at root, a `.devcontainer/` that provisions Node + .NET SDK + Python + Copilot ext + Context7 MCP, a `docs/` folder with intro/glossario/timing/follow-up, and a `plugins/` folder for the M4 bundle. The "Task API" (3 endpoints) is the shared application domain across all modules and languages.
 
 **Tech Stack:**
-- **Devcontainer**: `mcr.microsoft.com/devcontainers/universal:2-linux` base (Node 20+, .NET 8 SDK, Python 3.11+)
+- **Devcontainer**: `mcr.microsoft.com/devcontainers/universal:2-linux` base (Node 20+, .NET 10 SDK, Python 3.11+)
 - **Starters**: ASP.NET Core 8 Minimal API (.NET) · Hono on Node 20 (TypeScript) · FastAPI on Python 3.11 (Python)
 - **MCP**: Context7 (`@upstash/context7-mcp` via npx)
 - **Plugin format**: `plugin.json` manifest (Copilot CLI/VS Code Chat compatible)
@@ -205,7 +205,7 @@ Repository del workshop "The Agent Strikes Back" su GitHub Copilot (2026). Conti
 
 ## Stack
 
-- .NET 8 (ASP.NET Core Minimal API)
+- .NET 10 (ASP.NET Core Minimal API)
 - TypeScript 5 (Hono on Node 20)
 - Python 3.11 (FastAPI)
 
@@ -259,7 +259,7 @@ Write to `.devcontainer/devcontainer.json`:
   "name": "Copilot Workshop 2026",
   "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
   "features": {
-    "ghcr.io/devcontainers/features/dotnet:2": { "version": "8.0" },
+    "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
     "ghcr.io/devcontainers/features/node:1": { "version": "20" },
     "ghcr.io/devcontainers/features/python:1": { "version": "3.11" },
     "ghcr.io/devcontainers/features/github-cli:1": {}
@@ -440,12 +440,12 @@ Write to `modules/M1-istruzioni/starters/dotnet/Tasks.Tests/Tasks.Tests.csproj`:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
     <PackageReference Include="xunit" Version="2.6.6" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
@@ -512,7 +512,7 @@ Write to `modules/M1-istruzioni/starters/dotnet/TaskApi.csproj`:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -1163,7 +1163,7 @@ Write to `modules/M1-istruzioni/starters/dotnet/AGENTS.md`:
 # AGENTS.md — Task API (.NET)
 
 ## Stack
-- .NET 8 Minimal API (`Program.cs` + `TasksEndpoints.cs`)
+- .NET 10 Minimal API (`Program.cs` + `TasksEndpoints.cs`)
 - Test: xUnit + `Microsoft.AspNetCore.Mvc.Testing` (`Tasks.Tests/`)
 
 ## Struttura
@@ -2447,7 +2447,7 @@ Se il Codespace non parte: vedi [setup locale](#setup-locale-fallback).
 
 ## Setup locale (fallback)
 
-Se non usi Codespace, ti serve almeno **uno** tra: .NET 8 SDK, Node 20+, Python 3.11+. Più VS Code + estensione GitHub Copilot autenticata.
+Se non usi Codespace, ti serve almeno **uno** tra: .NET 10 SDK, Node 20+, Python 3.11+. Più VS Code + estensione GitHub Copilot autenticata.
 
 ## Lingue
 - README, docs, moduli: **italiano**.
