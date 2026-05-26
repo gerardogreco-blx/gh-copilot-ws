@@ -49,13 +49,14 @@ Il server MCP Context7 potrebbe non partire automaticamente al primo avvio del C
 
 Aprire Command Palette => `MCP: List Servers` => seleziona `context7` => `Avvia Server`.
 
-```bash
+### Step 5 - Cambio lingua della UI
+Per cambiare la lingua della UI di VS Code (menu, notifiche, ecc.):
+1. Command Palette => `Configure Display Language`
+2. Scegli la lingua preferita (es. `english`)
 
-## Configurazione locale
+### Configurazione locale
 
 Se per qualche motivo non puoi usare Codespaces, puoi seguire il workshop in locale. Vedi [setup locale](#setup-locale-fallback).
-
----
 
 ## Setup locale
 
