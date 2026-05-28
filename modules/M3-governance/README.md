@@ -1,150 +1,170 @@
-# Modulo M3 — Governance · Hooks
+# Modulo M3 - Governance · Hooks
 
-> Obiettivo: portare gli agenti in contesti dove la libertà di esecuzione **deve essere controllata**. I hook sono il meccanismo per applicare policy esecutive deterministiche al ciclo di vita dell'agente — `policy-as-code` per il comportamento agentic.
+> Obiettivo: usare gli hook per **iniettare contesto deterministico** nei subagenti, garantendo che lavorino sempre con la fonte di verità (es. lo schema del DB).
 
 ## Teoria
 
-### Cosa è un hook
+### Cos'è un hook
 
-Un hook è un **handler esterno all'LLM**, eseguito dall'host (Copilot CLI o Copilot Chat in VS Code) in corrispondenza di eventi specifici del ciclo di vita di una sessione agentic. Eventi tipici:
+> Nota: gli hook in Copilot Chat sono attualmente una funzionalità in preview.
 
-| Evento | Quando viene chiamato |
-|---|---|
-| `SessionStart` | All'avvio della sessione |
-| `UserPromptSubmit` | Ogni volta che l'utente invia un prompt |
-| `PreToolUse` | Prima dell'esecuzione di un tool (Bash, Edit, Write, MCP call…) |
-| `PostToolUse` | Dopo l'esecuzione di un tool |
-| `SubagentStart` / `SubagentStop` | Ciclo di vita di un subagent |
-| `PreCompact` | Prima di una compressione automatica del contesto |
-| `Stop` | A fine sessione |
+Un hook è un **handler esterno all'LLM**, eseguito dall'host in corrispondenza di eventi specifici del ciclo di vita di una sessione agentica. Eventi supportati:
 
-Il contratto di interazione tipico è semplice: il hook riceve un JSON su stdin con il payload dell'evento, può fare qualsiasi cosa (leggere file, chiamare servizi, scrivere log), e termina con un exit code che l'host interpreta:
-- `0`: l'evento procede normalmente.
-- diverso da `0`: l'host **blocca** l'azione e mostra all'agente lo stdout del hook come messaggio di errore (l'agente può quindi reagire — ad esempio riformulando il comando).
+| Evento             | Quando viene chiamato                                           | Caso tipico                                                                                |
+| ------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `SessionStart`     | All'avvio di una nuova sessione                                 | Iniettare contesto globale (variabili env, stato del repo, dashboard di salute)            |
+| `UserPromptSubmit` | Ogni volta che l'utente invia un prompt                         | Filtrare/arricchire il prompt, redazionare segreti, aggiungere contesto situazionale       |
+| `PreToolUse`       | Prima dell'esecuzione di un tool (Bash, Edit, Write, MCP call…) | Bloccare operazioni pericolose, richiedere approvazioni, modificare l'input del tool       |
+| `PostToolUse`      | Dopo l'esecuzione di un tool                                    | Eseguire formatter, registrare i risultati, avviare azioni successive                      |
+| `PreCompact`       | Prima di una compressione automatica del contesto               | Salvare contesto importante, esportare lo stato prima del troncamento                      |
+| `SubagentStart`    | Quando viene avviato un subagent                                | **Iniettare contesto specifico del subagente** (schema DB, contratti API, runbook)         |
+| `SubagentStop`     | Quando il subagent termina                                      | Aggregare risultati, pulire le risorse del subagent                                        |
+| `Stop`             | A fine sessione                                                 | Generare report, liberare risorse, inviare notifiche                                       |
 
-### Use case principali
+### Il contratto
 
-- **Guardrail** (`PreToolUse` con exit ≠ 0): blocca operazioni distruttive prima che vengano eseguite.
-- **Audit** (`PostToolUse` o `Stop`): registra cosa l'agente ha fatto, su quale file, con quale parametro.
-- **Automazione** (`SessionStart` o `Stop`): inizializza state, esegui cleanup, invia notifiche.
+Il hook riceve un JSON su stdin con il payload dell'evento, può fare qualsiasi cosa (leggere file, interrogare un DB, chiamare servizi), e comunica con l'host in due modi:
 
-### Differenza chiave rispetto alle istruzioni in AGENTS.md o nelle Skill
+- **Tramite exit code**: `0` consente l'evento; un exit diverso da `0` (tipicamente `2`) lo blocca e mostra all'agente lo stdout come errore.
+- **Tramite stdout JSON**: alcuni event (es. `SessionStart`, `SubagentStart`, `PostToolUse`) accettano in stdout un JSON con un campo `hookSpecificOutput.additionalContext`: il contenuto viene **iniettato nella conversation dell'agente come contesto di sistema**.
 
-Un'istruzione in AGENTS.md ("non eseguire `rm -rf`") è un *suggerimento all'LLM*, che può essere ignorato o aggirato da un prompt sufficientemente persuasivo o da un cambio di contesto. Un hook è **codice deterministico controllato dall'organizzazione**: esegue sempre, indipendentemente dal prompt, e non può essere disabilitato tramite chat. È enforcement reale, non guidance.
+È questa seconda modalità che useremo: l'hook non blocca, ma *parla* all'agente.
+
+### Differenza chiave rispetto a AGENTS.md, skill e prompt
+
+| Strumento  | Cosa è                              | Determinismo                          |
+| ---------- | ----------------------------------- | ------------------------------------- |
+| `AGENTS.md` | Suggerimento testuale all'LLM       | LLM può ignorarlo                     |
+| Skill      | Modulo di istruzioni caricabile     | LLM decide se attivarla                |
+| Hook       | **Codice** eseguito dall'host       | Esegue **sempre**, non aggirabile     |
+
+Per il context engineering, la conseguenza è netta: un AGENTS.md può *invitare* l'agente a "consultare lo schema del DB", ma se lo schema non è in contesto, l'agente può allucinare nomi di tabella e colonne. Un hook **garantisce** che lo schema sia in contesto ogni volta che serve.
 
 ## Hands-on
 
-### Registrazione del hook in Copilot Chat
+### Setup
 
-Crea **al root del workspace** il file `.github/hooks/pre-tool-use.json`. Questo è il path che VS Code Copilot Chat conosce di default per i hook a livello workspace.
+Il pacchetto governance "interno" (riusabile e auto-contenuto) vive in `modules/M3-governance/solution/.copilot/`:
+- `context/db-schema.sql`: lo schema del DB iniettato dal hook (sorgente di verità).
+- `hooks/subagent-start.sh`: l'implementazione bash del hook `SubagentStart`.
+- `hooks/subagent-start.ps1`: l'equivalente PowerShell per Windows.
+
+**Due file invece devono stare al root del workspace**, perché VS Code li trova solo da `.github/` al root:
+
+**1. `.github/agents/dba.agent.md`** — la definizione del subagente DBA, invocabile con `@dba`. Copia il file da `modules/M3-governance/solution/.github/agents/dba.agent.md` nella root del workspace, in `.github/agents/dba.agent.md`.
+
+**2. `.github/hooks/subagent-start.json`** — registra il hook in Copilot Chat:
 
 ```json
 {
   "hooks": {
-    "PreToolUse": [
+    "SubagentStart": [
       {
         "type": "command",
-        "command": "./.copilot/hooks/pre-tool-use.sh",
-        "timeout": 15
+        "command": "modules/M3-governance/solution/.copilot/hooks/subagent-start.sh",
+        "timeout": 10
       }
     ]
   }
 }
 ```
 
-Il `command` punta allo script implementativo in `.copilot/hooks/pre-tool-use.sh`. Su Windows, sostituiscilo con `./.copilot/hooks/pre-tool-use.ps1` (oppure aggiungi una seconda entry nell'array per registrare entrambi).
+Su Windows, sostituisci il `command` con `modules/M3-governance/solution/.copilot/hooks/subagent-start.ps1`.
 
-**Per attivare i hook in Copilot Chat**, abilita questo setting (User Settings JSON):
+**Per attivare gli hook in Copilot Chat**, apri i settings di VS Code, cerca `chat.useHooks` e abilita il checkbox. (Nel devcontainer dovrebbe essere già attivo.)
 
-```json
-"chat.useCustomAgentHooks": true
+**Verifica**:
+- In Copilot Chat esegui `/hooks` — deve apparire un `SubagentStart` registrato che punta al file giusto.
+- Digitando `@` in chat, nel selector dei subagenti deve apparire `@dba`.
+
+### Lo schema iniettato
+
+Apri `modules/M3-governance/solution/.copilot/context/db-schema.sql`. Nota la colonna `test_audit_seal` nella tabella `tasks`: è una **canary column** — un nome inventato che non può esistere nel training data di nessun LLM. La useremo per dimostrare in modo inconfutabile che l'iniezione ha funzionato.
+
+### Cosa fa il hook
+
+Apri `modules/M3-governance/solution/.copilot/hooks/subagent-start.sh`. Logica essenziale:
+
+1. Legge il JSON che Copilot gli passa su stdin (contiene `agent_id`, `agent_type`, ...).
+2. Se `agent_type` è uno tra `dba|database|sql-expert`, legge `db-schema.sql` e lo emette in stdout come JSON `{"hookSpecificOutput": {"additionalContext": "...lo schema..."}}`.
+3. Per gli altri subagenti, è no-op (exit 0 senza output).
+
+Copilot riceve l'`additionalContext` e lo aggiunge come messaggio di sistema **solo per il subagente appena avviato** — non inquina la sessione principale, non costa token quando non serve.
+
+### Step 1 - Prova che l'iniezione funziona (canary test)
+
+In Copilot Chat (modalità Agent), invoca il subagente DBA chiedendogli di descrivere lo schema:
+
+> @dba Elencami tutte le colonne della tabella `tasks` esattamente come sono nello schema attuale, una per riga, senza commenti.
+
+Risposta attesa: una lista di ~9 colonne **che include `test_audit_seal`**.
+
+- Se compare `test_audit_seal` → l'iniezione del hook ha funzionato. Quel nome non esiste in nessun training data, può solo venire dal nostro `db-schema.sql`.
+- Se non compare → il hook non si è agganciato. Controlla `/hooks` e i settings di VS Code.
+
+### Step 2 - Controprova: disattiva il hook
+
+Apri `.github/hooks/subagent-start.json` al root del workspace e commenta tutto il contenuto (o rinomina temporaneamente il file in `subagent-start.json.disabled`). Riavvia la sessione di chat (nuova conversazione).
+
+Riformula la stessa domanda:
+
+> @dba Elencami tutte le colonne della tabella `tasks` esattamente come sono nello schema attuale, una per riga, senza commenti.
+
+Risposta attesa: l'agente allucina nomi "ragionevoli" (`id`, `title`, `description`, `status`, `created_at`...) ma **non** `test_audit_seal`. Inoltre, di solito ammette esplicitamente di non avere accesso a uno schema reale.
+
+Il delta tra le due risposte è la prova *visiva* del valore del hook. Riattiva il hook (ripristina il JSON) prima di proseguire.
+
+### Step 3 - Estendi lo schema
+
+Apri `modules/M3-governance/solution/.copilot/context/db-schema.sql` e aggiungi una colonna in fondo alla tabella `tasks`, prima della parentesi chiusa:
+
+```sql
+    parent_task_id  INTEGER REFERENCES tasks(id),
 ```
 
-In alternativa al setup manuale, esiste lo **slash command** `/hooks` direttamente in Copilot Chat: digitalo nel chat input e premi invio per aprire una UI guidata di configurazione. Apre il file di registrazione con il cursore già pronto per la modifica.
+Salva. **Avvia una nuova chat** (il hook rilegge il file a ogni `SubagentStart`, ma il subagente esistente ha già il contesto vecchio).
 
-**Verifica che il hook sia caricato**: in Copilot Chat, esegui `/hooks` per vedere la lista degli hook registrati per la sessione corrente. Deve apparire un PreToolUse che punta a `pre-tool-use.sh`.
+Ora chiedi:
 
-### Configurazione
+> @dba Scrivimi una query che restituisce tutti i task figli di un task con id = 42, ordinati per priorità decrescente.
 
-Crea **al root del workspace** i seguenti file (il workshop ti spiega ogni file):
-- `.copilot/policy.yml`: il file di policy, leggibile e versionabile.
-- `.copilot/hooks/pre-tool-use.sh`: l'implementazione bash del hook `PreToolUse`.
-- `.copilot/hooks/pre-tool-use.ps1`: l'equivalente PowerShell per ambienti Windows (+ se sei su Windows)
-- `.github/hooks/pre-tool-use.json`: registra il hook in Copilot Chat.
-
-Apri `policy.yml` per vederne la struttura:
-
-```yaml
-shell_blocked:
-  - pattern: 'rm\s+-rf?'
-    reason: "Distruzione ricorsiva non recuperabile"
-  - pattern: 'git\s+push\s+--force(\s|$)'
-    reason: "Force push può sovrascrivere lavoro altrui"
-  # ...
-
-file_writes_blocked:
-  - pattern: '\.key$|\.pem$'
-    reason: "Mai scrivere chiavi crittografiche da codice generato"
-  # ...
-```
-
-Il hook (sh o ps1) implementa la stessa logica: legge il JSON in input dall'host, identifica il tool (`Bash`, `Edit`, `Write`, `MultiEdit`), valuta i parametri contro le regex della sezione pertinente, e termina con exit 1 + messaggio se c'è match.
-
-### Step 1 — Osserva il blocco in azione
-
-Verifica che il hook sia configurato come `PreToolUse` handler nelle impostazioni di Copilot Chat (il devcontainer lo fa automaticamente; se hai dovuto attivarlo a mano, fallo ora).
-
-In Copilot Chat (modalità Agent), chiedi:
-> Fai pulizia di tutti i file temporanei in `/tmp`.
-
-L'agente proverà ad eseguire `rm -rf /tmp/*` come tool `Bash`. Il hook intercetta, matcha il pattern `rm\s+-rf?`, e blocca con exit 1 + messaggio `BLOCKED by policy.yml: Distruzione ricorsiva non recuperabile`.
-
-L'agente vede il messaggio di errore e — tipicamente — riformula con un'alternativa sicura, ad esempio `find /tmp -type f -delete`, che non matcha alcun pattern e quindi passa.
-
-### Step 2 — Estendi la policy
-
-Apri `.copilot/policy.yml` e aggiungi nella sezione `file_writes_blocked` (prima della riga `# esercizio:`):
-
-```yaml
-  - pattern: '\.env$'
-    reason: "Mai scrivere file di environment dal codice generato"
-```
-
-Salva. Il hook rilegge il file di policy ad ogni invocazione, quindi non serve riavviare nulla.
-
-Ora chiedi all'agente:
-> Crea un file `.env` con credenziali demo per il database locale.
-
-L'agente tenta `Write` con `file_path: .env`. Il hook matcha la nuova regola e blocca.
-
-### Step 3 — Personalizza il messaggio di blocco
-
-Apri `.copilot/hooks/pre-tool-use.sh` (o la versione `.ps1` se usi Windows) e modifica la funzione `block` per fornire un messaggio più informativo all'agente:
-
-```bash
-block() {
-  local reason="$1"
-  echo "🛑 BLOCKED by .copilot/policy.yml"
-  echo "Reason: $reason"
-  echo ""
-  echo "Suggerimento: riformula in modo non distruttivo, oppure modifica policy.yml se sei sicuro."
-  exit 1
-}
-```
-
-Riprova un comando che causa blocco: l'agente riceve un messaggio strutturato e tende a reagire diversamente — non solo "ho ricevuto errore" ma "ho ricevuto un suggerimento sul cosa fare ora".
+L'agente userà `parent_task_id` nella `WHERE`. Senza modificare il subagente, senza ricaricare alcuna skill, lo schema è cambiato e il subagente si è aggiornato: questa è la natura "policy-as-code" del context engineering.
 
 ## Wrap
 
-- I hook sono `policy-as-code`: regole versionate, deterministiche, eseguite fuori dall'LLM.
-- Sono il livello di controllo che permette di portare gli agenti in repository aziendali senza paura: chiunque legge il `policy.yml` capisce cosa è bloccato e perché.
-- A differenza delle istruzioni in AGENTS.md, **non sono bypassabili tramite manipolazione del prompt**.
+- Un hook `SubagentStart` ti permette di **garantire** che ogni dispatch di un subagente parta con la ground truth nel contesto — schema DB, contratti API interni, runbook operativi.
+- L'host (Copilot Chat) accetta in stdout `hookSpecificOutput.additionalContext`: questa è l'API documentata per la context injection, non un trucco.
+- Lo stesso meccanismo, usato con exit code `2` invece che con `additionalContext`, ti permette di **bloccare** azioni (`PreToolUse`) — è la stessa famiglia di pattern. Il modulo si concentra sul caso iniettivo perché è più sottile e meno coperto in letteratura.
 
 ## Cosa ti porti a casa
 
-- `.copilot/policy.yml` al root del workspace, riusabile (copia-incollabile in un repo aziendale lunedì mattina).
-- Hook `.copilot/hooks/pre-tool-use.sh` + `.copilot/hooks/pre-tool-use.ps1` funzionanti al root.
+- Il pacchetto `.copilot/` (schema + hook script) è auto-contenuto: lo script localizza `db-schema.sql` come sibling, quindi puoi copiare l'intera cartella al root di un repo aziendale lunedì mattina senza modifiche.
+- Il file `.github/hooks/subagent-start.json` è la registrazione lato VS Code: in produzione lo metti al root del repo e fai puntare `command` a `./.copilot/hooks/subagent-start.sh`.
+- Il subagente `dba.agent.md` mostra il pattern: il subagente *si fida* del fatto che il contesto giusto gli sia stato dato dal hook, e si comporta di conseguenza.
 
-Se ti blocchi: `solution/.github/` e `solution/.copilot/` contengono le versioni di riferimento da copiare al root del repo.
+Riferimento durante il workshop: tutto in `modules/M3-governance/solution/`.
+
+## Appendice (bonus) - PreToolUse per policy enforcement
+
+> Questa sezione è materiale extra opzionale, fuori dal flusso principale del workshop. Se ti avanza tempo o vuoi approfondire a casa, mostra **l'altra faccia** dello stesso meccanismo: invece di iniettare contesto via stdout, blocca azioni via exit code.
+
+Il pacchetto solution include già un secondo hook funzionante, registrato su `PreToolUse`, che usa una policy in YAML per bloccare comandi distruttivi prima che vengano eseguiti.
+
+File coinvolti (tutti in `modules/M3-governance/solution/`):
+- `.copilot/policy.yml` — regole leggibili e versionabili (pattern regex su shell + path).
+- `.copilot/hooks/pre-tool-use.sh` / `.ps1` — implementazione che legge la policy, valuta i parametri del tool, e termina con exit `1` + messaggio se matcha.
+- `.github/hooks/pre-tool-use.json` — registrazione (da copiare al root del workspace come per `subagent-start.json`).
+
+**Differenza di contratto rispetto a `SubagentStart`**:
+- `SubagentStart` usa **stdout JSON** (`additionalContext`) per *aggiungere* contesto.
+- `PreToolUse` usa **exit code != 0** per *bloccare* l'azione; lo stdout in quel caso diventa il messaggio di errore mostrato all'agente.
+
+**Come provarlo velocemente**: registra `pre-tool-use.json` al root del workspace (puoi tenerlo attivo insieme a `subagent-start.json`, sono indipendenti). Poi in Copilot Chat:
+
+> Ho `node_modules` da 2GB nel progetto, è gonfia di pacchetti obsoleti. Cancellala completamente così la rigenero da zero con `npm install`.
+
+L'agente propone `rm -rf node_modules`; il hook matcha il pattern `rm\s+-rf?` in `policy.yml` e blocca con un messaggio strutturato. L'agente in genere riformula con un'alternativa non distruttiva (es. `find node_modules -delete`) che non matcha la policy e passa.
+
+Il valore didattico di questa modalità è complementare al modulo principale: insieme dimostrano che gli hook sono **un'unica famiglia di pattern** ("codice esterno deterministico che dialoga con la sessione agentica") con due polarità — *iniezione* (additive) e *enforcement* (subtractive).
 
 ➡️ Prossimo modulo: [`../M4-distribuzione/README.md`](../M4-distribuzione/README.md)

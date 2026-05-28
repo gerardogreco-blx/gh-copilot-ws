@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "SubagentStart": [
+      {
+        "type": "command",
+        "command": "modules/M3-governance/solution/.copilot/hooks/subagent-start.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}

@@ -6,7 +6,8 @@
 
 set -euo pipefail
 
-POLICY="${COPILOT_REPO_ROOT:-$PWD}/.copilot/policy.yml"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+POLICY="$SCRIPT_DIR/../policy.yml"
 if [ ! -f "$POLICY" ]; then
   exit 0
 fi
@@ -37,7 +38,8 @@ read_section() {
 
 read_reason() {
   local pattern="$1" section="$2"
-  awk -v section="$section" -v p="$pattern" '
+  PATTERN_VAR="$pattern" awk -v section="$section" '
+    BEGIN { p = ENVIRON["PATTERN_VAR"] }
     $0 ~ "^"section":$" { inside=1; next }
     /^[a-zA-Z_]+:$/ { inside=0 }
     inside && /pattern:/ {

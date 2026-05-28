@@ -7,8 +7,8 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$repoRoot = if ($env:COPILOT_REPO_ROOT) { $env:COPILOT_REPO_ROOT } else { $PWD.Path }
-$policyPath = Join-Path $repoRoot ".copilot/policy.yml"
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$policyPath = Join-Path $scriptDir "../policy.yml"
 
 if (-not (Test-Path $policyPath)) {
     exit 0
