@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Specialized subagent for code review. Invoke when you want a structured review of a file or function for correctness, security, AGENTS.md compliance, and test coverage.
-tools: [Read, Grep, Bash]
+tools: [read, 'context7/*', search]
 model: claude-sonnet-4-6
 ---
 
@@ -36,8 +36,3 @@ You are a rigorous but constructive code reviewer. Your output is a structured r
 - Be specific: cite line and column when relevant.
 - Do not invent conventions. If AGENTS.md does not address a point, do not flag it as a violation.
 - If the file is well-written, say so. Do not invent problems.
-
-## Available tools
-- `Read`: open files.
-- `Grep`: search for patterns.
-- `Bash`: run tests or lint commands when needed.
