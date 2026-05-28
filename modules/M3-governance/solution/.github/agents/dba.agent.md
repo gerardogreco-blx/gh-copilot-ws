@@ -1,7 +1,7 @@
 ---
 name: dba
 description: Subagent specializzato in query SQL sul database applicativo. Invocalo con `@dba` quando vuoi scrivere o spiegare una query sulle tabelle del prodotto. Riceve lo schema corrente dal SubagentStart hook.
-tools: [read, search]
+tools: []
 model: claude-sonnet-4-6
 ---
 

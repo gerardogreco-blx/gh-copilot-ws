@@ -34,7 +34,7 @@ Il hook riceve un JSON su stdin con il payload dell'evento, può fare qualsiasi 
 
 | Strumento  | Cosa è                              | Determinismo                          |
 | ---------- | ----------------------------------- | ------------------------------------- |
-| `AGENTS.md` | Suggerimento testuale all'LLM       | LLM può ignorarlo                     |
+| AGENTS.md | Suggerimento testuale all'LLM       | LLM può ignorarlo                     |
 | Skill      | Modulo di istruzioni caricabile     | LLM decide se attivarla                |
 | Hook       | **Codice** eseguito dall'host       | Esegue **sempre**, non aggirabile     |
 
@@ -44,14 +44,16 @@ Per il context engineering, la conseguenza è netta: un AGENTS.md può *invitare
 
 ### Setup
 
-Il pacchetto governance "interno" (riusabile e auto-contenuto) vive in `modules/M3-governance/solution/.copilot/`:
+Il pacchetto governance è presente in `modules/M3-governance/solution/.copilot/`:
 - `context/db-schema.sql`: lo schema del DB iniettato dal hook (sorgente di verità).
 - `hooks/subagent-start.sh`: l'implementazione bash del hook `SubagentStart`.
 - `hooks/subagent-start.ps1`: l'equivalente PowerShell per Windows.
 
-**Due file invece devono stare al root del workspace**, perché VS Code li trova solo da `.github/` al root:
+**Crea i seguenti file:**
 
 **1. `.github/agents/dba.agent.md`** — la definizione del subagente DBA, invocabile con `@dba`. Copia il file da `modules/M3-governance/solution/.github/agents/dba.agent.md` nella root del workspace, in `.github/agents/dba.agent.md`.
+
+> Nota: la lista dei tool di questo subagent è vuota.
 
 **2. `.github/hooks/subagent-start.json`** — registra il hook in Copilot Chat:
 
@@ -93,42 +95,30 @@ Copilot riceve l'`additionalContext` e lo aggiunge come messaggio di sistema **s
 
 ### Step 1 - Prova che l'iniezione funziona (canary test)
 
-In Copilot Chat (modalità Agent), invoca il subagente DBA chiedendogli di descrivere lo schema:
+In Copilot Chat (modalità Agent), seleziona l'agente principale e chiedi:
 
-> @dba Elencami tutte le colonne della tabella `tasks` esattamente come sono nello schema attuale, una per riga, senza commenti.
+> Elencami tutte le colonne della tabella `tasks` esattamente come sono nello schema attuale, una per riga, senza commenti usando il subagent dba
 
 Risposta attesa: una lista di ~9 colonne **che include `test_audit_seal`**.
 
 - Se compare `test_audit_seal` → l'iniezione del hook ha funzionato. Quel nome non esiste in nessun training data, può solo venire dal nostro `db-schema.sql`.
 - Se non compare → il hook non si è agganciato. Controlla `/hooks` e i settings di VS Code.
 
-### Step 2 - Controprova: disattiva il hook
-
-Apri `.github/hooks/subagent-start.json` al root del workspace e commenta tutto il contenuto (o rinomina temporaneamente il file in `subagent-start.json.disabled`). Riavvia la sessione di chat (nuova conversazione).
-
-Riformula la stessa domanda:
-
-> @dba Elencami tutte le colonne della tabella `tasks` esattamente come sono nello schema attuale, una per riga, senza commenti.
-
-Risposta attesa: l'agente allucina nomi "ragionevoli" (`id`, `title`, `description`, `status`, `created_at`...) ma **non** `test_audit_seal`. Inoltre, di solito ammette esplicitamente di non avere accesso a uno schema reale.
-
-Il delta tra le due risposte è la prova *visiva* del valore del hook. Riattiva il hook (ripristina il JSON) prima di proseguire.
-
-### Step 3 - Estendi lo schema
+### Step 2 - Estendi lo schema
 
 Apri `modules/M3-governance/solution/.copilot/context/db-schema.sql` e aggiungi una colonna in fondo alla tabella `tasks`, prima della parentesi chiusa:
 
 ```sql
-    parent_task_id  INTEGER REFERENCES tasks(id),
+    parent_task_id  INTEGER REFERENCES tasks(id)
 ```
 
-Salva. **Avvia una nuova chat** (il hook rilegge il file a ogni `SubagentStart`, ma il subagente esistente ha già il contesto vecchio).
+Salva. **Avvia una nuova chat** (l'hook rilegge il file a ogni `SubagentStart`, ma il subagente esistente ha già il contesto vecchio).
 
 Ora chiedi:
 
-> @dba Scrivimi una query che restituisce tutti i task figli di un task con id = 42, ordinati per priorità decrescente.
+> Scrivimi una query che restituisce tutti i task figli di un task con id = 42, ordinati per priorità decrescente usando il subagent dba
 
-L'agente userà `parent_task_id` nella `WHERE`. Senza modificare il subagente, senza ricaricare alcuna skill, lo schema è cambiato e il subagente si è aggiornato: questa è la natura "policy-as-code" del context engineering.
+L'agente userà `parent_task_id` nella `WHERE`: lo schema è cambiato e il subagente si è aggiornato: questa è la natura "policy-as-code" del context engineering.
 
 ## Wrap
 
@@ -164,7 +154,5 @@ File coinvolti (tutti in `modules/M3-governance/solution/`):
 > Ho `node_modules` da 2GB nel progetto, è gonfia di pacchetti obsoleti. Cancellala completamente così la rigenero da zero con `npm install`.
 
 L'agente propone `rm -rf node_modules`; il hook matcha il pattern `rm\s+-rf?` in `policy.yml` e blocca con un messaggio strutturato. L'agente in genere riformula con un'alternativa non distruttiva (es. `find node_modules -delete`) che non matcha la policy e passa.
-
-Il valore didattico di questa modalità è complementare al modulo principale: insieme dimostrano che gli hook sono **un'unica famiglia di pattern** ("codice esterno deterministico che dialoga con la sessione agentica") con due polarità — *iniezione* (additive) e *enforcement* (subtractive).
 
 ➡️ Prossimo modulo: [`../M4-distribuzione/README.md`](../M4-distribuzione/README.md)
