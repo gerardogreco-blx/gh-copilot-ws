@@ -9,8 +9,9 @@ Repository del workshop "The Agent Strikes Back" su GitHub Copilot (2026). Conti
 Il workshop guida il partecipante a creare progressivamente, **a livello del root del repo** (cioè qui), le seguenti customizations Copilot Chat:
 - `.github/skills/endpoint-creator/SKILL.md` (creata in M1)
 - `.github/agents/code-reviewer.agent.md` (creata in M2)
-- `.github/hooks/pre-tool-use.json` + `.copilot/policy.yml` + `.copilot/hooks/pre-tool-use.{sh,ps1}` (creati in M3)
-- `plugins/copilot-safety-guard/` (creato in M4)
+- `.github/agents/dba.agent.md` + `.github/hooks/subagent-start.json` + `.copilot/hooks/subagent-start.{sh,ps1}` + `.copilot/context/db-schema.sql` (creati in M3 — iniezione di contesto via SubagentStart)
+- `.github/hooks/pre-tool-use.json` + `.copilot/policy.yml` + `.copilot/hooks/pre-tool-use.{sh,ps1}` (M3, appendice — policy enforcement via PreToolUse)
+- `plugins/copilot-safety-guard/` (creato in M4 — impacchetta un sottoinsieme curato: skill + code-reviewer + safety hook)
 
 ## Stack per linguaggio
 
