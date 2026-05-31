@@ -1,16 +1,14 @@
 {
   "name": "copilot-safety-guard",
   "version": "0.1.0",
-  "description": "Workshop plugin: endpoint-creator skill + code-reviewer subagent + safety PreToolUse hook for guarded agentic development.",
-  "components": {
-    "skills": ["./skills/endpoint-creator"],
-    "agents": ["./agents/code-reviewer.agent.md"],
-    "hooks": {
-      "preToolUse": "./hooks/pre-tool-use.sh"
-    },
-    "mcpServers": []
+  "description": "Workshop plugin: endpoint-creator skill + code-reviewer subagent + safety preToolUse hook for guarded agentic development.",
+  "author": {
+    "name": "Workshop Participant",
+    "email": "you@example.com"
   },
-  "author": "Workshop Participant",
   "license": "MIT",
-  "repository": "https://github.com/<your-fork>/gh-copilot-ws"
+  "keywords": ["safety", "review", "demo", "dev-days-2026"],
+  "skills": "skills",
+  "agents": "agents",
+  "hooks": "hooks.json"
 }
