@@ -11,4 +11,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TaskApi.csproj" />
+  </ItemGroup>
 </Project>

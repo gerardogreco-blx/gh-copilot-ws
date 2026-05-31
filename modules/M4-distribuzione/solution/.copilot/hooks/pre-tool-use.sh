@@ -6,7 +6,8 @@
 
 set -euo pipefail
 
-POLICY="${COPILOT_REPO_ROOT:-$PWD}/.copilot/policy.yml"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+POLICY="$SCRIPT_DIR/../policy.yml"
 if [ ! -f "$POLICY" ]; then
   exit 0
 fi

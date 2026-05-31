@@ -32,7 +32,10 @@ function Read-Section([string]$sectionName, [string]$path) {
     $currentPattern = $null
     foreach ($line in Get-Content -LiteralPath $path) {
         if ($line -match "^${sectionName}:\s*$") { $inside = $true; continue }
-        if ($line -match "^[A-Za-z_]+:\s*$") { $inside = $false; $currentPattern = $null; continue }
+        if ($line -match "^[A-Za-z_]+:\s*$") {
+            if ($inside -and $currentPattern) { $rules += $currentPattern }
+            $inside = $false; $currentPattern = $null; continue
+        }
         if (-not $inside) { continue }
         if ($line -match "^\s*-\s*pattern:\s*['""]?(.*?)['""]?\s*$") {
             if ($currentPattern) { $rules += $currentPattern }

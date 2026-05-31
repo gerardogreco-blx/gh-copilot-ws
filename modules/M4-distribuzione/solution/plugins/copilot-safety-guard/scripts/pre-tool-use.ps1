@@ -7,8 +7,8 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$repoRoot = if ($env:COPILOT_REPO_ROOT) { $env:COPILOT_REPO_ROOT } else { $PWD.Path }
-$policyPath = Join-Path $repoRoot ".copilot/policy.yml"
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$policyPath = Join-Path $scriptDir "../policy.yml"
 
 if (-not (Test-Path $policyPath)) {
     exit 0
@@ -32,7 +32,10 @@ function Read-Section([string]$sectionName, [string]$path) {
     $currentPattern = $null
     foreach ($line in Get-Content -LiteralPath $path) {
         if ($line -match "^${sectionName}:\s*$") { $inside = $true; continue }
-        if ($line -match "^[A-Za-z_]+:\s*$") { $inside = $false; $currentPattern = $null; continue }
+        if ($line -match "^[A-Za-z_]+:\s*$") {
+            if ($inside -and $currentPattern) { $rules += $currentPattern }
+            $inside = $false; $currentPattern = $null; continue
+        }
         if (-not $inside) { continue }
         if ($line -match "^\s*-\s*pattern:\s*['""]?(.*?)['""]?\s*$") {
             if ($currentPattern) { $rules += $currentPattern }
