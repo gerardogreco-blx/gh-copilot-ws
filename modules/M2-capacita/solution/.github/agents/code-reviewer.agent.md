@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Specialized subagent for code review. Invoke when you want a structured review of a file or function for correctness, security, AGENTS.md compliance, and test coverage.
-tools: [read, 'context7/*', search]
+tools: [search, 'context7/*']
 model: claude-sonnet-4-6
 ---
 

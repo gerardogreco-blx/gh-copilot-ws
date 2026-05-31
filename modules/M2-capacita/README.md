@@ -25,7 +25,7 @@ Un subagent è definito in un file `agents/<nome>.agent.md` con frontmatter YAML
 ---
 name: code-reviewer
 description: Specialized subagent for code review. Invoke when you want a structured review of a file or function for correctness, security, AGENTS.md compliance, and test coverage.
-tools: [read, 'context7/*', search]
+tools: [search, 'context7/*']
 model: claude-sonnet-4-6
 ---
 ```
@@ -95,7 +95,7 @@ Crea il file `.github/agents/code-reviewer.agent.md` **al root del workspace** c
 ---
 name: code-reviewer
 description: Specialized subagent for code review. Invoke when you want a structured review of a file or function for correctness, security, AGENTS.md compliance, and test coverage.
-tools: [read, 'context7/*', search]
+tools: [search, 'context7/*']
 model: claude-sonnet-4-6
 ---
 
