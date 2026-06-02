@@ -42,18 +42,21 @@ Apri i settings di VS Code (`Cmd+,` o `Ctrl+,`) e cerca `chat.plugins.marketplac
 
 **1b - Sfoglia e installa `dev-guardian`**
 
-Registrato il marketplace, installa il plugin in uno di questi modi:
+Registrato il marketplace in 1a, installa il plugin:
 
-*Da Extensions view*
 1. Apri la Extensions view con `Cmd+Shift+X` (macOS) o `Ctrl+Shift+X` (Windows/Linux).
 2. Digita `@agentPlugins` nella barra di ricerca: compaiono i plugin dei marketplace configurati.
 3. Click su **Install** in corrispondenza di `dev-guardian`.
 
-*Da Impostazioni*
-1. Apri le impostazioni di VS Code (`Cmd+,` o `Ctrl+,`) e cerca `chat.plugins.marketplaces`. È un array di URL di repository Git che espongono un marketplace.
-2. Aggiungi il marketplace `https://github.com/render93/gh-copilot-dev-days-2026`
-3. Digita `@agentPlugins` nella barra di ricerca: compaiono i plugin dei marketplace configurati.
-4. Click su **Install** in corrispondenza di `dev-guardian`.
+### Step 2 - Ispeziona dev-guardian
+
+Prima di costruire il tuo, guarda com'è fatto un plugin reale. Apri la cartella del plugin [`dev-guardian`](https://github.com/render93/gh-copilot-dev-days-2026/tree/main/plugins/dev-guardian) e osserva l'anatomia del bundle:
+
+- `plugin.json` — il manifest: dichiara `skills`, `agents`, `hooks` (e `mcpServers`) puntando alle rispettive directory/file.
+- `hooks.json` — mappa un evento (es. `preToolUse`) allo script da eseguire.
+- `skills/`, `agents/`, `scripts/` — i componenti veri e propri.
+
+È la stessa struttura che ricreerai nello Step 3 per il tuo plugin.
 
 ### Step 3 - Crea il tuo plugin
 
@@ -63,6 +66,7 @@ Combina gli artefatti dei moduli precedenti in un plugin coerente: `copilot-safe
 plugins/copilot-safety-guard/
 ├── plugin.json                         (manifest del bundle)
 ├── hooks.json                          (registra l'hook preToolUse => script)
+├── policy.yml                          (regole di blocco lette dagli script hook - copiata da .copilot/policy.yml)
 ├── skills/
 │   └── endpoint-creator/SKILL.md       (copiata da .github/skills/endpoint-creator/SKILL.md)
 ├── agents/
@@ -111,6 +115,40 @@ Gli hook non si dichiarano nel manifest ma in `hooks.json`, che mappa l'evento a
 
 Il manifest quindi non punta direttamente allo script: dichiara `"hooks": "hooks.json"`, e all'installazione il client (Copilot Chat / Copilot CLI / Claude Code) legge `hooks.json` e registra l'hook con il proprio meccanismo nativo - non serve creare manualmente `.github/hooks/pre-tool-use.json` come faresti a mano nel workspace.
 
+> Lo script `pre-tool-use` legge le regole di blocco da `policy.yml` (nella cartella del plugin, risolta dallo script come `../policy.yml`): se quel file non viene impacchettato l'hook gira ma non blocca nulla. Per questo `policy.yml` fa parte del bundle.
+
+### Step 4 - Pubblica il tuo plugin
+
+Un plugin diventa installabile quando vive in un repository che fa da **marketplace**. Serve un file indice `.github/plugin/marketplace.json` che elenca i plugin del repo:
+
+```json
+{
+  "name": "my-workshop-marketplace",
+  "owner": { "name": "Your Name", "email": "you@example.com" },
+  "metadata": {
+    "description": "Il mio marketplace del workshop",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "copilot-safety-guard",
+      "description": "endpoint-creator skill + code-reviewer subagent + safety preToolUse hook.",
+      "version": "0.1.0",
+      "source": "copilot-safety-guard"
+    }
+  ]
+}
+```
+
+`pluginRoot` indica la cartella che contiene i plugin (`./plugins`); `source` è il nome della sottocartella del plugin sotto `pluginRoot`. Poi:
+
+1. `git add . && git commit && git push` su un repository Git accessibile. Il tuo fork del workshop va benissimo: ha già `plugins/copilot-safety-guard/` al root.
+2. In un altro workspace (o un collega) aggiunge l'URL del tuo repo a `chat.plugins.marketplaces`, esattamente come in **1a** con il marketplace di esempio.
+3. `@agentPlugins` => compare `copilot-safety-guard` => **Install**.
+
+Questo chiude il cerchio: hai creato un plugin (Step 3) e l'hai reso installabile da un marketplace, come `dev-guardian` nello Step 1.
+
 ## Wrap
 
 - Plugin = insieme di estensioni per agenti AI (skill, agent, hook, MCP server) raccolti in un bundle versionato con manifest dichiarativo.
@@ -119,6 +157,9 @@ Il manifest quindi non punta direttamente allo script: dichiara `"hooks": "hooks
 ## Cosa ti porti a casa
 
 - `dev-guardian` installato e ispezionato come reference completo.
-- Plugin `plugins/copilot-safety-guard/` al root del workspace, con `plugin.json` e `hooks.json`, pronto in teoria per essere pubblicato.
+- Plugin `plugins/copilot-safety-guard/` al root del workspace, con `plugin.json`, `hooks.json` e `policy.yml`.
+- Marketplace pubblicato via `.github/plugin/marketplace.json` e plugin installabile con `@agentPlugins`.
 
-Se ti blocchi: `solution/plugins/copilot-safety-guard/` contiene il bundle plugin completo da copiare al root del repo.
+Se ti blocchi: `solution/plugins/copilot-safety-guard/` contiene il bundle plugin completo e `solution/.github/plugin/marketplace.json` l'indice del marketplace, da copiare al root del repo.
+
+🎉 Hai completato tutti i moduli del workshop! Torna al [README principale](../../README.md).
