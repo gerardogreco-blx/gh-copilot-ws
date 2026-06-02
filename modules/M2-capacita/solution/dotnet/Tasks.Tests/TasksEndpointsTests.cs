@@ -73,4 +73,51 @@ public class TasksEndpointsTests
         var response = await client.DeleteAsync("/tasks/999");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task PostTask_Returns400_WhenTitleEmpty()
+    {
+        var client = NewClient();
+        var response = await client.PostAsJsonAsync("/tasks", new { title = "" });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PatchTask_UpdatesStatus()
+    {
+        var client = NewClient();
+        var created = await client.PostAsJsonAsync("/tasks", new { title = "Patch me" });
+        var task = await created.Content.ReadFromJsonAsync<TaskApi.Tasks.TaskItem>();
+        Assert.NotNull(task);
+
+        var response = await client.PatchAsJsonAsync($"/tasks/{task.Id}", new { status = "done" });
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<TaskApi.Tasks.TaskItem>();
+        Assert.NotNull(updated);
+        Assert.Equal("done", updated.Status);
+    }
+
+    [Fact]
+    public async Task PatchTask_Returns400_WhenStatusInvalid()
+    {
+        var client = NewClient();
+        var created = await client.PostAsJsonAsync("/tasks", new { title = "Patch me" });
+        var task = await created.Content.ReadFromJsonAsync<TaskApi.Tasks.TaskItem>();
+        Assert.NotNull(task);
+
+        var response = await client.PatchAsJsonAsync($"/tasks/{task.Id}", new { status = "bogus" });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutTask_Returns400_WhenStatusInvalid()
+    {
+        var client = NewClient();
+        var created = await client.PostAsJsonAsync("/tasks", new { title = "Put me" });
+        var task = await created.Content.ReadFromJsonAsync<TaskApi.Tasks.TaskItem>();
+        Assert.NotNull(task);
+
+        var response = await client.PutAsJsonAsync($"/tasks/{task.Id}", new { title = "x", status = "bogus" });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

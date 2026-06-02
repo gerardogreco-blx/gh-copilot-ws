@@ -1,0 +1,17 @@
+{
+  "name": "my-workshop-marketplace",
+  "owner": { "name": "Your Name", "email": "you@example.com" },
+  "metadata": {
+    "description": "Il mio marketplace del workshop",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "copilot-safety-guard",
+      "description": "endpoint-creator skill + code-reviewer subagent + safety preToolUse hook.",
+      "version": "0.1.0",
+      "source": "copilot-safety-guard"
+    }
+  ]
+}

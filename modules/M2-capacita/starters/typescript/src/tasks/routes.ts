@@ -9,10 +9,11 @@ export function tasksRoutes(): Hono {
 
   app.post("/tasks", async (c) => {
     const body = await c.req.json().catch(() => ({}));
-    if (!body.title || typeof body.title !== "string") {
+    if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
       return c.json({ error: "title required" }, 400);
     }
     const created = store.create(body.title);
+    c.header("Location", `/tasks/${created.id}`);
     return c.json(created, 201);
   });
 
@@ -29,7 +30,7 @@ export function tasksRoutes(): Hono {
   app.put("/tasks/:id", async (c) => {
     const id = Number(c.req.param("id"));
     const body = await c.req.json().catch(() => ({}));
-    if (!body.title || typeof body.title !== "string") {
+    if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
       return c.json({ error: "title required" }, 400);
     }
     if (body.status !== "todo" && body.status !== "done") {

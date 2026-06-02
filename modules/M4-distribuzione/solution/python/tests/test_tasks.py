@@ -45,3 +45,33 @@ def test_delete_task_returns_204_when_exists():
 def test_delete_task_returns_404_when_not_found():
     response = client.delete("/tasks/999")
     assert response.status_code == 404
+
+
+def test_post_task_rejects_empty_title():
+    response = client.post("/tasks", json={"title": ""})
+    assert response.status_code == 400
+    assert response.json() == {"error": "title required"}
+
+
+def test_patch_task_updates_status():
+    created = client.post("/tasks", json={"title": "Patch me"})
+    task = created.json()
+    response = client.patch(f"/tasks/{task['id']}", json={"status": "done"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "done"
+
+
+def test_patch_task_rejects_invalid_status():
+    created = client.post("/tasks", json={"title": "Patch me"})
+    task = created.json()
+    response = client.patch(f"/tasks/{task['id']}", json={"status": "bogus"})
+    assert response.status_code == 400
+    assert response.json() == {"error": "status must be 'todo' or 'done'"}
+
+
+def test_put_task_rejects_invalid_status():
+    created = client.post("/tasks", json={"title": "Put me"})
+    task = created.json()
+    response = client.put(f"/tasks/{task['id']}", json={"title": "x", "status": "bogus"})
+    assert response.status_code == 400
+    assert response.json() == {"error": "status must be 'todo' or 'done'"}

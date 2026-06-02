@@ -42,7 +42,7 @@ Ogni devcontainer dedicato installa solo l'SDK del suo linguaggio. Se a metà wo
 
 Click **"Create codespace"** in basso a destra.
 
-Attendere qualche minuto per la creazione e l'inizializzazione del Codespace. Al termine nel tab `Terminale` dpvresti vedere il messaggio `==> Done. Open modules/M1-istruzioni/README.md to start.`.
+Attendere qualche minuto per la creazione e l'inizializzazione del Codespace. Al termine nel tab `Terminale` dovresti vedere il messaggio `==> Done. Open modules/M1-istruzioni/README.md to start.`.
 
 ### Step 4 - Avvio MCP server (Context7)
 Il server MCP Context7 potrebbe non partire automaticamente al primo avvio del Codespace.
@@ -126,7 +126,7 @@ uvicorn app.main:app  # => server su http://localhost:8000
 
 ### Step 4 - Configurazione MCP server (Context7) in locale
 
-Lo starter contiene già `.vscode/mcp.json` configurato per usare l'endpoint HTTP hosted di Context7 (`https://mcp.context7.com/mcp`).
+Il repo contiene già `.vscode/mcp.json` al root del workspace, configurato per usare l'endpoint HTTP hosted di Context7 (`https://mcp.context7.com/mcp`).
 
 VS Code Copilot Chat rileva il file all'apertura del workspace e ti propone di abilitare il server, accetta quando richiesto.
 

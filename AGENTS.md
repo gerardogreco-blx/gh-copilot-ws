@@ -48,7 +48,7 @@ Il workshop guida il partecipante a creare progressivamente, **a livello del roo
 - **Lingua**: italiano per testi rivolti ai partecipanti (README, doc, hint). Inglese per nomi file, codice, branch, commit message, skill/agent content.
 - **Naming endpoint**: kebab-case nei path (`/tasks/stats`, non `/taskStats`).
 - **Validazione input**: invalido → 400 con body `{ "error": "<messaggio>" }`.
-- **Status code**: 200 GET, 201 POST con Location header, 200 PATCH, 404 not found, 400 validation error.
+- **Status code**: 200 GET, 201 POST con Location header, 200 PATCH, 204 No Content (DELETE), 404 not found, 400 validation error.
 - **Test obbligatorio**: ogni endpoint ha 1 happy-path + 1 error case.
 
 ## Vincoli

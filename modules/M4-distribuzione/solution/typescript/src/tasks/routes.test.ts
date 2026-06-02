@@ -71,4 +71,62 @@ describe("Tasks API", () => {
     const res = await app.request("/tasks/999", { method: "DELETE" });
     expect(res.status).toBe(404);
   });
+
+  it("POST /tasks rejects empty title with 400", async () => {
+    const res = await app.request("/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "" }),
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("title required");
+  });
+
+  it("PATCH /tasks/:id updates status", async () => {
+    const created = await app.request("/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Patch me" }),
+    });
+    const task = await created.json();
+    const res = await app.request(`/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "done" }),
+    });
+    expect(res.status).toBe(200);
+    expect((await res.json()).status).toBe("done");
+  });
+
+  it("PATCH /tasks/:id rejects invalid status with 400", async () => {
+    const created = await app.request("/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Patch me" }),
+    });
+    const task = await created.json();
+    const res = await app.request(`/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "bogus" }),
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("status must be 'todo' or 'done'");
+  });
+
+  it("PUT /tasks/:id rejects invalid status with 400", async () => {
+    const created = await app.request("/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Put me" }),
+    });
+    const task = await created.json();
+    const res = await app.request(`/tasks/${task.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "x", status: "bogus" }),
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("status must be 'todo' or 'done'");
+  });
 });

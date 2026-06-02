@@ -1,6 +1,6 @@
 # Modulo M1 - Istruzioni · AGENTS.md + Skills
 
-> Obiettivo: capire come si descrive un repo a un file AGENTS.md e come si crea una Skill. Vedere in pratica la differenza tra "regole sempre attive" e "know-how caricato quando serve".
+> Obiettivo: capire come si descrive un repo in un file AGENTS.md e come si crea una Skill. Vedere in pratica la differenza tra "regole sempre attive" e "know-how caricato quando serve".
 
 ## Teoria
 
@@ -75,7 +75,7 @@ Osserva nella risposta dell'agente:
 
 ### Step 2 - Crea una Skill e osserva l'auto-loading
 
-Crea il file `.github/skills/endpoint-creator/SKILL.md` *nella root del workspace** (la root del repo che hai forkato), con questo contenuto:
+Crea il file `.github/skills/endpoint-creator/SKILL.md` **nella root del workspace** (la root del repo che hai forkato), con questo contenuto:
 
 > **Nota**: VS Code Copilot Chat cerca le skill in `.github/skills/` al workspace root — ecco perché va lì, non dentro la cartella della starter.
 
@@ -97,7 +97,7 @@ description: Use when creating a new REST endpoint in this repo. Covers validati
 - Python: pydantic.BaseModel; TS: type-narrowing; .NET: record + manual checks
 
 ## 3. Status codes
-- 200 GET · 201 POST + Location header · 200 PUT (replace) · 200 PATCH · 404 not found · 400 validation
+- 200 GET · 201 POST + Location header · 200 PUT (replace) · 200 PATCH · 204 No Content (DELETE) · 404 not found · 400 validation
 
 ## 4. Tests
 Every endpoint ships with one happy path test and one error case test.

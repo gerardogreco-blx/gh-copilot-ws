@@ -15,7 +15,7 @@ description: Use when creating a new REST endpoint in this repo. Covers validati
 - Python: pydantic.BaseModel; TS: type-narrowing; .NET: record + manual checks
 
 ## 3. Status codes
-- 200 GET · 201 POST + Location header · 200 PUT (replace) · 200 PATCH · 404 not found · 400 validation
+- 200 GET · 201 POST + Location header · 200 PUT (replace) · 200 PATCH · 204 No Content (DELETE) · 404 not found · 400 validation
 
 ## 4. Tests
 Every endpoint ships with one happy path test and one error case test.

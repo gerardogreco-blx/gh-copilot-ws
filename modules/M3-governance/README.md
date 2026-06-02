@@ -23,9 +23,9 @@ Un hook è un **handler esterno all'LLM**, eseguito dall'host in corrispondenza 
 
 ### Il contratto
 
-Il hook riceve un JSON su stdin con il payload dell'evento, può fare qualsiasi cosa (leggere file, interrogare un DB, chiamare servizi), e comunica con l'host in due modi:
+Lo hook riceve un JSON su stdin con il payload dell'evento, può fare qualsiasi cosa (leggere file, interrogare un DB, chiamare servizi), e comunica con l'host in due modi:
 
-- **Tramite exit code**: `0` consente l'evento; un exit diverso da `0` (tipicamente `2`) lo blocca e mostra all'agente lo stdout come errore.
+- **Tramite exit code**: `0` consente l'evento; un exit diverso da `0` (tipicamente `1`) lo blocca e mostra all'agente lo stdout come errore.
 - **Tramite stdout JSON**: alcuni event (es. `SessionStart`, `SubagentStart`, `PostToolUse`) accettano in stdout un JSON con un campo `hookSpecificOutput.additionalContext`: il contenuto viene **iniettato nella conversation dell'agente come contesto di sistema**.
 
 È questa seconda modalità che useremo: l'hook non blocca, ma *parla* all'agente.
@@ -45,8 +45,8 @@ Per il context engineering, la conseguenza è netta: un AGENTS.md può *invitare
 ### Setup
 
 Il pacchetto governance è presente in `modules/M3-governance/solution/.copilot/`:
-- `context/db-schema.sql`: lo schema del DB iniettato dal hook (sorgente di verità).
-- `hooks/subagent-start.sh`: l'implementazione bash del hook `SubagentStart`.
+- `context/db-schema.sql`: lo schema del DB iniettato dallo hook (sorgente di verità).
+- `hooks/subagent-start.sh`: l'implementazione bash dello hook `SubagentStart`.
 - `hooks/subagent-start.ps1`: l'equivalente PowerShell per Windows.
 
 **Crea i seguenti file:**
@@ -55,7 +55,7 @@ Il pacchetto governance è presente in `modules/M3-governance/solution/.copilot/
 
 > Nota: la lista dei tool di questo subagent è vuota.
 
-**2. `.github/hooks/subagent-start.json`** — registra il hook in Copilot Chat:
+**2. `.github/hooks/subagent-start.json`** — registra lo hook in Copilot Chat:
 
 ```json
 {
@@ -83,7 +83,7 @@ Su Windows, sostituisci il `command` con `modules/M3-governance/solution/.copilo
 
 Apri `modules/M3-governance/solution/.copilot/context/db-schema.sql`. Nota la colonna `test_audit_seal` nella tabella `tasks`: è una **canary column** — un nome inventato che non può esistere nel training data di nessun LLM. La useremo per dimostrare in modo inconfutabile che l'iniezione ha funzionato.
 
-### Cosa fa il hook
+### Cosa fa lo hook
 
 Apri `modules/M3-governance/solution/.copilot/hooks/subagent-start.sh`. Logica essenziale:
 
@@ -101,8 +101,8 @@ In Copilot Chat (modalità Agent), seleziona l'agente principale e chiedi:
 
 Risposta attesa: una lista di ~9 colonne **che include `test_audit_seal`**.
 
-- Se compare `test_audit_seal` → l'iniezione del hook ha funzionato. Quel nome non esiste in nessun training data, può solo venire dal nostro `db-schema.sql`.
-- Se non compare → il hook non si è agganciato. Controlla `/hooks` e i settings di VS Code.
+- Se compare `test_audit_seal` → l'iniezione dello hook ha funzionato. Quel nome non esiste in nessun training data, può solo venire dal nostro `db-schema.sql`.
+- Se non compare → lo hook non si è agganciato. Controlla `/hooks` e i settings di VS Code.
 
 ### Step 2 - Estendi lo schema
 
@@ -124,13 +124,13 @@ L'agente userà `parent_task_id` nella `WHERE`: lo schema è cambiato e il subag
 
 - Un hook `SubagentStart` ti permette di **garantire** che ogni dispatch di un subagente parta con la ground truth nel contesto — schema DB, contratti API interni, runbook operativi.
 - L'host (Copilot Chat) accetta in stdout `hookSpecificOutput.additionalContext`: questa è l'API documentata per la context injection, non un trucco.
-- Lo stesso meccanismo, usato con exit code `2` invece che con `additionalContext`, ti permette di **bloccare** azioni (`PreToolUse`) — è la stessa famiglia di pattern. Il modulo si concentra sul caso iniettivo perché è più sottile e meno coperto in letteratura.
+- Lo stesso meccanismo, usato con exit code `1` invece che con `additionalContext`, ti permette di **bloccare** azioni (`PreToolUse`) — è la stessa famiglia di pattern. Il modulo si concentra sul caso iniettivo perché è più sottile e meno coperto in letteratura.
 
 ## Cosa ti porti a casa
 
 - Il pacchetto `.copilot/` (schema + hook script) è auto-contenuto: lo script localizza `db-schema.sql` come sibling, quindi puoi copiare l'intera cartella al root di un repo aziendale lunedì mattina senza modifiche.
 - Il file `.github/hooks/subagent-start.json` è la registrazione lato VS Code: in produzione lo metti al root del repo e fai puntare `command` a `./.copilot/hooks/subagent-start.sh`.
-- Il subagente `dba.agent.md` mostra il pattern: il subagente *si fida* del fatto che il contesto giusto gli sia stato dato dal hook, e si comporta di conseguenza.
+- Il subagente `dba.agent.md` mostra il pattern: il subagente *si fida* del fatto che il contesto giusto gli sia stato dato dallo hook, e si comporta di conseguenza.
 
 Riferimento durante il workshop: tutto in `modules/M3-governance/solution/`.
 
@@ -153,6 +153,6 @@ File coinvolti (tutti in `modules/M3-governance/solution/`):
 
 > Ho `node_modules` da 2GB nel progetto, è gonfia di pacchetti obsoleti. Cancellala completamente così la rigenero da zero con `npm install`.
 
-L'agente propone `rm -rf node_modules`; il hook matcha il pattern `rm\s+-rf?` in `policy.yml` e blocca con un messaggio strutturato. L'agente in genere riformula con un'alternativa non distruttiva (es. `find node_modules -delete`) che non matcha la policy e passa.
+L'agente propone `rm -rf node_modules`; lo hook matcha il pattern `rm\s+-rf?` in `policy.yml` e blocca con un messaggio strutturato. L'agente in genere riformula con un'alternativa non distruttiva (es. `find node_modules -delete`) che non matcha la policy e passa.
 
 ➡️ Prossimo modulo: [`../M4-distribuzione/README.md`](../M4-distribuzione/README.md)
