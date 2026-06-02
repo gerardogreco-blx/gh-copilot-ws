@@ -2,6 +2,8 @@
 
 > Obiettivo: vedere due assi indipendenti con cui si estende un agente. **Subagents**: delega di task con contesto isolato. **MCP**: protocollo standard per esporre nuovi tool e risorse all'agente.
 
+> 🔵 **Claude Code (estensione VS Code)?** Modulo identico. MCP è uno standard cross-tool: lo stesso server Context7 si usa da entrambi. Il subagent `code-reviewer` ha lo **stesso corpo** (system prompt); cambiano solo il frontmatter (nomi dei tool Claude) e la cartella (`.claude/agents/`). Sotto ogni passo trovi un blocco 🔵 con l'equivalente esatto.
+
 ## Teoria
 
 ### Subagent
@@ -87,6 +89,25 @@ Ora chiedi all'agente:
 
 Osserva: l'agente invoca un tool di Context7 (visibile nella chat come tool-call), riceve le docs, e produce un'analisi confrontando il codice attuale con l'API documentata.
 
+<details>
+<summary>🔵 <b>Claude Code — Step 1 (Context7 via MCP)</b></summary>
+
+Claude Code usa il file **`.mcp.json`** al root del workspace (già presente), equivalente di `.vscode/mcp.json` ma con la chiave `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "context7": { "type": "http", "url": "https://mcp.context7.com/mcp" }
+  }
+}
+```
+
+Stesse conseguenze (HTTP hosted, nessun processo locale, niente Node.js richiesto). Claude Code rileva `.mcp.json` all'apertura del workspace e chiede l'approvazione del server. Per gestire i server MCP digita **`/mcp`** nel pannello Claude Code (stato, abilitazione, autenticazione).
+
+Poi usa **lo stesso prompt** dello Step 1: Claude invoca i tool di Context7 (`resolve-library-id`, `get-library-docs`, visibili come tool-call) e confronta il codice con l'API documentata.
+
+</details>
+
 ### Step 2 - Crea il subagent `code-reviewer`
 
 Crea il file `.github/agents/code-reviewer.agent.md` **al root del workspace** con questo contenuto:
@@ -134,6 +155,26 @@ You are a rigorous but constructive code reviewer. Your output is a structured r
 
 Nota la allowlist di tool: nessun edit, solo lettura e ricerca. Inoltre il server MCP `context7` è incluso tra i tool disponibili, quindi il subagent può usarlo per verificare le convenzioni aggiornate.
 
+<details>
+<summary>🔵 <b>Claude Code — Step 2 (subagent code-reviewer)</b></summary>
+
+Stesso subagent, in **`.claude/agents/code-reviewer.md`** al root del workspace. Il **corpo è identico** (lo system prompt qui sopra, da "# Code Reviewer Subagent" in giù): copialo tal quale. Cambia solo il **frontmatter**, perché i nomi dei tool e del modello in Claude Code sono diversi da quelli di Copilot:
+
+```markdown
+---
+name: code-reviewer
+description: Specialized subagent for code review. Invoke when you want a structured review of a file or function for correctness, security, AGENTS.md compliance, and test coverage.
+tools: Read, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+model: sonnet
+---
+```
+
+Mappatura: l'allowlist Copilot `[search, 'context7/*']` diventa i tool di sola lettura/ricerca di Claude (`Read, Grep, Glob`) più i tool del server MCP Context7 (`mcp__context7__...`). Stesso principio del minimo privilegio: **nessun `Edit`/`Write`**, quindi il subagent non modifica codice. `model: sonnet` è l'alias idiomatico di Claude Code (equivale a `claude-sonnet-4-6`).
+
+Reference: `modules/M2-capacita/solution/.claude/agents/code-reviewer.md`.
+
+</details>
+
 ### Step 3.1 - Invoca il subagent `code-reviewer`
 
 - In Copilot Chat, crea una nuova chat e chiedi:
@@ -143,6 +184,13 @@ Osserva:
 - l'output è strutturato nei 5 blocchi definiti dal subagent (Correctness, Security, AGENTS.md compliance, Test coverage, Suggested fixes).
 - Nessuna modifica al codice è fatta dal subagent, solo suggerimenti.
 - Il subagent è stato richiamato esplicitamente tramite `@code-reviewer`. L'agente può anche essere selezionato implicitamente dal main agent oppure cliccando sulla icona degli agenti (la seconda da sinistra) e scegliendo `code-reviewer` dalla lista.
+
+<details>
+<summary>🔵 <b>Claude Code — Step 3.1 (invoca il subagent)</b></summary>
+
+In Claude Code invoca il subagent con **`@agent-code-reviewer`** (digitando `@` compare il typeahead degli agenti). Usa **lo stesso prompt** dello step. In alternativa puoi descrivere il task e lasciare che sia Claude a delegare al subagent in base alla sua `description`, oppure gestire gli agenti con il comando `/agents`. L'output è la stessa struttura a 5 sezioni e il subagent non modifica il codice (nessun tool di scrittura nella allowlist).
+
+</details>
 
 ## Wrap
 
@@ -155,5 +203,7 @@ Osserva:
 - Subagent `code-reviewer` in `.github/agents/code-reviewer.agent.md` al root del workspace, invocabile via `@code-reviewer`.
 
 Se ti blocchi: `solution/.github/agents/code-reviewer.agent.md` contiene la versione di riferimento da copiare al root del repo.
+
+> 🔵 Claude Code: reference in `solution/.claude/agents/code-reviewer.md` (stesso corpo, frontmatter adattato), da copiare in `.claude/agents/code-reviewer.md` al root del repo.
 
 ➡️ Prossimo modulo: [`../M3-governance/README.md`](../M3-governance/README.md)

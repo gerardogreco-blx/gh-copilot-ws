@@ -1,0 +1,11 @@
+{
+  "name": "claude-safety-guard",
+  "version": "0.1.0",
+  "description": "Workshop plugin: endpoint-creator skill + code-reviewer subagent + safety PreToolUse hook for guarded agentic development.",
+  "author": {
+    "name": "Workshop Participant",
+    "email": "you@example.com"
+  },
+  "license": "MIT",
+  "keywords": ["safety", "review", "demo", "dev-days-2026"]
+}

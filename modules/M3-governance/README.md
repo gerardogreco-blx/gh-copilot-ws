@@ -2,6 +2,8 @@
 
 > Obiettivo: usare gli hook per **iniettare contesto deterministico** nei subagenti, garantendo che lavorino sempre con la fonte di verità (es. lo schema del DB).
 
+> 🔵 **Claude Code (estensione VS Code)?** Modulo identico nei concetti. Anche Claude Code ha l'hook **`SubagentStart`** (stesso meccanismo: inietta `additionalContext` quando parte un subagent). Differenze solo tecniche: la registrazione vive in `.claude/settings.json` (non in `.github/hooks/*.json`), gli hook sono **attivi di default** (niente `chat.useHooks`), e si filtra il subagent con il campo `matcher`. Sotto ogni passo trovi un blocco 🔵. Tutti i file di riferimento Claude sono in `modules/M3-governance/solution/.claude/`.
+
 ## Teoria
 
 ### Cos'è un hook
@@ -79,9 +81,47 @@ Su Windows, sostituisci il `command` con `modules/M3-governance/solution/.copilo
 - In Copilot Chat esegui `/hooks` — deve apparire un `SubagentStart` registrato che punta al file giusto.
 - Digitando `@` in chat, nel selector dei subagenti deve apparire `@dba`.
 
+<details>
+<summary>🔵 <b>Claude Code — Setup</b></summary>
+
+Il pacchetto governance per Claude è in `modules/M3-governance/solution/.claude/`:
+- `context/db-schema.sql` — lo schema (stesso contenuto, stessa canary column `test_audit_seal`).
+- `hooks/subagent-start.sh` / `.ps1` — l'hook `SubagentStart` in versione Claude.
+
+**Crea i seguenti file al root del workspace:**
+
+**1. `.claude/agents/dba.md`** — copia il file da `modules/M3-governance/solution/.claude/agents/dba.md`. È lo stesso subagent DBA (corpo identico); il frontmatter usa `model: sonnet` e `tools: []` (lista vuota: il subagent non usa tool, si fida dello schema iniettato). Lo invochi con `@agent-dba`.
+
+**2. `.claude/settings.json`** — registra l'hook (gli hook in Claude Code sono attivi di default, nessuna impostazione da spuntare):
+
+```json
+{
+  "hooks": {
+    "SubagentStart": [
+      {
+        "matcher": "dba",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/modules/M3-governance/solution/.claude/hooks/subagent-start.sh", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Il `matcher: "dba"` fa sì che l'hook giri **solo** quando parte il subagent `dba` (il matcher di `SubagentStart` filtra sul nome dell'agente). Su Windows usa la versione PowerShell: `"command": "pwsh -File $CLAUDE_PROJECT_DIR/modules/M3-governance/solution/.claude/hooks/subagent-start.ps1"`.
+
+**Verifica**:
+- Esegui `/hooks` nel pannello Claude Code — deve comparire un `SubagentStart` registrato.
+- Digitando `@` (o `@agent-`) compare `dba` tra i subagenti.
+
+</details>
+
 ### Lo schema iniettato
 
 Apri `modules/M3-governance/solution/.copilot/context/db-schema.sql`. Nota la colonna `test_audit_seal` nella tabella `tasks`: è una **canary column** — un nome inventato che non può esistere nel training data di nessun LLM. La useremo per dimostrare in modo inconfutabile che l'iniezione ha funzionato.
+
+> 🔵 Claude Code: lo schema di riferimento è in `modules/M3-governance/solution/.claude/context/db-schema.sql` (contenuto identico, stessa canary column).
 
 ### Cosa fa lo hook
 
@@ -93,6 +133,18 @@ Apri `modules/M3-governance/solution/.copilot/hooks/subagent-start.sh`. Logica e
 
 Copilot riceve l'`additionalContext` e lo aggiunge come messaggio di sistema **solo per il subagente appena avviato** — non inquina la sessione principale, non costa token quando non serve.
 
+<details>
+<summary>🔵 <b>Claude Code — cosa fa lo hook</b></summary>
+
+`modules/M3-governance/solution/.claude/hooks/subagent-start.sh`. La logica è la stessa, ancora più semplice perché il filtro sul subagent è fatto dal `matcher: "dba"` in `settings.json` (non serve leggere il tipo di agente nello script):
+
+1. Legge `db-schema.sql` (sibling in `../context/`).
+2. Lo emette su stdout come JSON `{"hookSpecificOutput": {"hookEventName": "SubagentStart", "additionalContext": "...schema..."}}`.
+
+`SubagentStart` è un evento "context only": Claude aggiunge l'`additionalContext` come contesto **solo per il subagent appena avviato**, esattamente come Copilot. Stessa garanzia, stesso effetto.
+
+</details>
+
 ### Step 1 - Prova che l'iniezione funziona (canary test)
 
 In Copilot Chat (modalità Agent), seleziona l'agente principale e chiedi:
@@ -103,6 +155,13 @@ Risposta attesa: una lista di ~9 colonne **che include `test_audit_seal`**.
 
 - Se compare `test_audit_seal` → l'iniezione dello hook ha funzionato. Quel nome non esiste in nessun training data, può solo venire dal nostro `db-schema.sql`.
 - Se non compare → lo hook non si è agganciato. Controlla `/hooks` e i settings di VS Code.
+
+<details>
+<summary>🔵 <b>Claude Code — Step 1 (canary test)</b></summary>
+
+Identico. Nel pannello Claude Code usa **lo stesso prompt** (elenca le colonne di `tasks` usando il subagent dba). Se compare `test_audit_seal` l'iniezione via `SubagentStart` ha funzionato. Se non compare, verifica con `/hooks` che l'hook sia registrato e che il `matcher` sia `dba`.
+
+</details>
 
 ### Step 2 - Estendi lo schema
 
@@ -120,6 +179,13 @@ Ora chiedi:
 
 L'agente userà `parent_task_id` nella `WHERE`: lo schema è cambiato e il subagente si è aggiornato: questa è la natura "policy-as-code" del context engineering.
 
+<details>
+<summary>🔵 <b>Claude Code — Step 2 (estendi lo schema)</b></summary>
+
+Identico: aggiungi la colonna `parent_task_id` in fondo alla tabella in `modules/M3-governance/solution/.claude/context/db-schema.sql`, salva, e **avvia una nuova conversazione** (l'hook rilegge il file a ogni `SubagentStart`). Stesso prompt sui task figli: il subagent `dba` userà `parent_task_id` perché lo schema iniettato è cambiato.
+
+</details>
+
 ## Wrap
 
 - Un hook `SubagentStart` ti permette di **garantire** che ogni dispatch di un subagente parta con la ground truth nel contesto — schema DB, contratti API interni, runbook operativi.
@@ -133,6 +199,8 @@ L'agente userà `parent_task_id` nella `WHERE`: lo schema è cambiato e il subag
 - Il subagente `dba.agent.md` mostra il pattern: il subagente *si fida* del fatto che il contesto giusto gli sia stato dato dallo hook, e si comporta di conseguenza.
 
 Riferimento durante il workshop: tutto in `modules/M3-governance/solution/`.
+
+> 🔵 Claude Code: i file di riferimento sono in `modules/M3-governance/solution/.claude/` (agents `dba.md` + `code-reviewer.md`, `settings.json`, `hooks/`, `context/db-schema.sql`, `policy.yml`).
 
 ## Appendice (bonus) - PreToolUse per policy enforcement
 
@@ -154,5 +222,33 @@ File coinvolti (tutti in `modules/M3-governance/solution/`):
 > Ho `node_modules` da 2GB nel progetto, è gonfia di pacchetti obsoleti. Cancellala completamente così la rigenero da zero con `npm install`.
 
 L'agente propone `rm -rf node_modules`; lo hook matcha il pattern `rm\s+-rf?` in `policy.yml` e blocca con un messaggio strutturato. L'agente in genere riformula con un'alternativa non distruttiva (es. `find node_modules -delete`) che non matcha la policy e passa.
+
+<details>
+<summary>🔵 <b>Claude Code — Appendice (PreToolUse)</b></summary>
+
+Stesso meccanismo. File di riferimento in `modules/M3-governance/solution/.claude/`:
+- `policy.yml` — stesse regole (regex su shell + path).
+- `hooks/pre-tool-use.sh` / `.ps1` — implementazione Claude: legge da stdin `tool_name` e `tool_input` (non `tool`/`parameters`) e **blocca con `exit 2`** scrivendo il motivo su stderr (in Copilot era `exit 1` + stdout).
+
+Registra l'hook aggiungendo a `.claude/settings.json` un blocco `PreToolUse` (puoi tenerlo insieme a `SubagentStart`):
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/modules/M3-governance/solution/.claude/hooks/pre-tool-use.sh", "timeout": 15 }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Poi prova con **lo stesso prompt** (cancellare `node_modules`): Claude propone `rm -rf node_modules`, l'hook matcha `rm\s+-rf?` in `policy.yml` e blocca; Claude riformula con un'alternativa non distruttiva. La versione completa di `settings.json` (con entrambi gli hook) è in `modules/M3-governance/solution/.claude/settings.json`.
+
+</details>
 
 ➡️ Prossimo modulo: [`../M4-distribuzione/README.md`](../M4-distribuzione/README.md)

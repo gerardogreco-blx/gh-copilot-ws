@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "SubagentStart": [
+      {
+        "matcher": "dba",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/modules/M4-distribuzione/solution/.claude/hooks/subagent-start.sh", "timeout": 10 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/modules/M4-distribuzione/solution/.claude/hooks/pre-tool-use.sh", "timeout": 15 }
+        ]
+      }
+    ]
+  }
+}

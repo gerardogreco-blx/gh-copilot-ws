@@ -2,6 +2,8 @@
 
 > Obiettivo: trasformare gli artefatti agentic privati (skill, subagent, hook, configurazioni di MCP server) in **unità distribuibili e installabili** condivisibili col team o l'organizzazione.
 
+> 🔵 **Claude Code (estensione VS Code)?** Modulo identico nei concetti: plugin = bundle versionato, marketplace = registry Git. Differenze tecniche: il manifest è `.claude-plugin/plugin.json` (i componenti `skills/`, `agents/`, `hooks/hooks.json` sono **auto-scoperti** dalle cartelle convenzionali), il marketplace è `.claude-plugin/marketplace.json`, e l'installazione usa i comandi `/plugin marketplace add` e `/plugin install`. Sotto ogni passo trovi un blocco 🔵. Riferimenti in `modules/M4-distribuzione/solution/.claude/` e `modules/M4-distribuzione/solution/plugins/claude-safety-guard/`.
+
 ## Teoria
 
 ### Plugin
@@ -48,6 +50,20 @@ Registrato il marketplace in 1a, installa il plugin:
 2. Digita `@agentPlugins` nella barra di ricerca: compaiono i plugin dei marketplace configurati.
 3. Click su **Install** in corrispondenza di `dev-guardian`.
 
+<details>
+<summary>🔵 <b>Claude Code — Step 1 (installa un marketplace + plugin reale)</b></summary>
+
+Il marketplace `render93/gh-copilot-dev-days-2026` è in formato Copilot (`.github/plugin/marketplace.json`), quindi non è installabile da Claude Code, che legge `.claude-plugin/marketplace.json`. Per provare l'installazione di un plugin **reale** con Claude Code usa il marketplace community ufficiale (stesso flusso in due fasi: registri il source, poi installi un plugin):
+
+```
+/plugin marketplace add anthropics/claude-plugins-community
+/plugin
+```
+
+Il comando `/plugin` apre il gestore: vai su **Marketplaces**, sfoglia i plugin del community marketplace e clicca **Install** su uno a tua scelta. (In alternativa: `/plugin install <nome>@claude-community`.) Concetto identico allo Step 1 Copilot: prima il source, poi il singolo plugin.
+
+</details>
+
 ### Step 2 - Ispeziona dev-guardian
 
 Prima di costruire il tuo, guarda com'è fatto un plugin reale. Apri la cartella del plugin [`dev-guardian`](https://github.com/render93/gh-copilot-dev-days-2026/tree/main/plugins/dev-guardian) e osserva l'anatomia del bundle:
@@ -57,6 +73,18 @@ Prima di costruire il tuo, guarda com'è fatto un plugin reale. Apri la cartella
 - `skills/`, `agents/`, `scripts/` — i componenti veri e propri.
 
 È la stessa struttura che ricreerai nello Step 3 per il tuo plugin.
+
+<details>
+<summary>🔵 <b>Claude Code — Step 2 (ispeziona un plugin reale)</b></summary>
+
+Stesso obiettivo: guardare l'anatomia di un plugin reale prima di costruirne uno. Apri la cartella di un plugin che hai installato dal community marketplace (oppure sfoglia un repo di plugin Claude su GitHub) e osserva:
+- `.claude-plugin/plugin.json` — il manifest (name, version, description).
+- `hooks/hooks.json` — mappa un evento (es. `PreToolUse`) allo script.
+- `skills/`, `agents/`, `scripts/` — i componenti, **auto-scoperti** dalle cartelle convenzionali (non serve elencarli nel manifest).
+
+È la stessa struttura che ricreerai nello Step 3.
+
+</details>
 
 ### Step 3 - Crea il tuo plugin
 
@@ -117,6 +145,61 @@ Il manifest quindi non punta direttamente allo script: dichiara `"hooks": "hooks
 
 > Lo script `pre-tool-use` legge le regole di blocco da `policy.yml` (nella cartella del plugin, risolta dallo script come `../policy.yml`): se quel file non viene impacchettato l'hook gira ma non blocca nulla. Per questo `policy.yml` fa parte del bundle.
 
+<details>
+<summary>🔵 <b>Claude Code — Step 3 (crea il tuo plugin)</b></summary>
+
+Stesso bundle, struttura Claude. Crea `plugins/claude-safety-guard/` al root del workspace:
+
+```
+plugins/claude-safety-guard/
+├── .claude-plugin/
+│   └── plugin.json            (manifest: solo metadati — i componenti sono auto-scoperti)
+├── hooks/
+│   └── hooks.json             (registra l'hook PreToolUse => script)
+├── policy.yml                 (regole di blocco, copiata da .claude/policy.yml)
+├── skills/
+│   └── endpoint-creator/SKILL.md   (copiata da .claude/skills/...)
+├── agents/
+│   └── code-reviewer.md        (copiato da .claude/agents/code-reviewer.md)
+└── scripts/
+    ├── pre-tool-use.sh         (versione Claude: tool_name/tool_input, exit 2)
+    └── pre-tool-use.ps1
+```
+
+`.claude-plugin/plugin.json` contiene **solo metadati**: `skills/`, `agents/` e `hooks/hooks.json` vengono auto-scoperti dalle cartelle convenzionali (non serve dichiararli, a differenza del manifest Copilot).
+
+```json
+{
+  "name": "claude-safety-guard",
+  "version": "0.1.0",
+  "description": "Workshop plugin: endpoint-creator skill + code-reviewer subagent + safety PreToolUse hook for guarded agentic development.",
+  "author": { "name": "Workshop Participant", "email": "you@example.com" },
+  "license": "MIT",
+  "keywords": ["safety", "review", "demo", "dev-days-2026"]
+}
+```
+
+Gli hook si dichiarano in `hooks/hooks.json` (stesso formato della chiave `hooks` di `settings.json`); lo script si referenzia con la variabile `${CLAUDE_PLUGIN_ROOT}`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-tool-use.sh", "timeout": 5 }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Come per Copilot, lo script legge `policy.yml` (risolto come `../policy.yml` rispetto a `scripts/`): se non lo impacchetti, l'hook gira ma non blocca nulla. Reference completo: `modules/M4-distribuzione/solution/plugins/claude-safety-guard/`.
+
+</details>
+
 ### Step 4 - Pubblica il tuo plugin
 
 Un plugin diventa installabile quando vive in un repository che fa da **marketplace**. Serve un file indice `.github/plugin/marketplace.json` che elenca i plugin del repo:
@@ -149,6 +232,36 @@ Un plugin diventa installabile quando vive in un repository che fa da **marketpl
 
 Questo chiude il cerchio: hai creato un plugin (Step 3) e l'hai reso installabile da un marketplace, come `dev-guardian` nello Step 1.
 
+<details>
+<summary>🔵 <b>Claude Code — Step 4 (pubblica il tuo plugin)</b></summary>
+
+Per Claude Code l'indice del marketplace è **`.claude-plugin/marketplace.json`** al root del repo:
+
+```json
+{
+  "name": "my-workshop-marketplace",
+  "owner": { "name": "Your Name", "email": "you@example.com" },
+  "metadata": { "description": "Il mio marketplace del workshop", "version": "0.1.0", "pluginRoot": "./plugins" },
+  "plugins": [
+    {
+      "name": "claude-safety-guard",
+      "source": "claude-safety-guard",
+      "description": "endpoint-creator skill + code-reviewer subagent + safety PreToolUse hook.",
+      "version": "0.1.0"
+    }
+  ]
+}
+```
+
+`metadata.pluginRoot` (`./plugins`) viene anteposto ai `source` relativi, quindi `source: "claude-safety-guard"` risolve a `./plugins/claude-safety-guard`. Poi:
+
+1. `git add . && git commit && git push` sul tuo fork (ha già `plugins/claude-safety-guard/` e `.claude-plugin/marketplace.json` al root).
+2. Tu (o un collega) in un altro workspace: `/plugin marketplace add <url-del-tuo-repo>` poi `/plugin install claude-safety-guard@my-workshop-marketplace`.
+
+Chiude il cerchio esattamente come la versione Copilot. Reference: `modules/M4-distribuzione/solution/.claude-plugin/marketplace.json`.
+
+</details>
+
 ## Wrap
 
 - Plugin = insieme di estensioni per agenti AI (skill, agent, hook, MCP server) raccolti in un bundle versionato con manifest dichiarativo.
@@ -161,5 +274,7 @@ Questo chiude il cerchio: hai creato un plugin (Step 3) e l'hai reso installabil
 - Marketplace pubblicato via `.github/plugin/marketplace.json` e plugin installabile con `@agentPlugins`.
 
 Se ti blocchi: `solution/plugins/copilot-safety-guard/` contiene il bundle plugin completo e `solution/.github/plugin/marketplace.json` l'indice del marketplace, da copiare al root del repo.
+
+> 🔵 Claude Code: il bundle di riferimento è in `solution/plugins/claude-safety-guard/` e l'indice del marketplace in `solution/.claude-plugin/marketplace.json`.
 
 🎉 Hai completato tutti i moduli del workshop! Torna al [README principale](../../README.md).

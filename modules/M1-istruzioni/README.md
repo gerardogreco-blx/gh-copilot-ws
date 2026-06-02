@@ -2,6 +2,8 @@
 
 > Obiettivo: capire come si descrive un repo in un file AGENTS.md e come si crea una Skill. Vedere in pratica la differenza tra "regole sempre attive" e "know-how caricato quando serve".
 
+> 🔵 **Claude Code (estensione VS Code)?** Questo modulo è identico. `AGENTS.md` è già cross-tool: al root del repo c'è `CLAUDE.md` che lo importa (`@AGENTS.md`), quindi Claude Code lavora con lo **stesso contratto**. La Skill che crei nello Step 2 vale per entrambi gli strumenti: cambia solo la cartella (`.claude/skills/` invece di `.github/skills/`). Sotto ogni passo hands-on trovi un blocco 🔵 con l'equivalente esatto.
+
 ## Teoria
 
 ### AGENTS.md
@@ -73,6 +75,13 @@ Osserva nella risposta dell'agente:
 
 **Verifica**: l'agente segue il contratto della repo *senza che tu glielo abbia detto in chat*. È AGENTS.md che lo ha guidato.
 
+<details>
+<summary>🔵 <b>Claude Code — Step 1</b></summary>
+
+Identico. Apri il pannello **Claude Code** in VS Code e, in una nuova conversazione, incolla **lo stesso prompt** qui sopra. Claude Code carica `CLAUDE.md` (che importa `AGENTS.md`) all'avvio della sessione, quindi segue lo stesso contratto di repo: posizione dell'endpoint, validazione, status code, test accanto al codice. La verifica è la stessa — è `AGENTS.md` (via `CLAUDE.md`) a guidare l'agente, senza istruzioni in chat.
+
+</details>
+
 ### Step 2 - Crea una Skill e osserva l'auto-loading
 
 Crea il file `.github/skills/endpoint-creator/SKILL.md` **nella root del workspace** (la root del repo che hai forkato), con questo contenuto:
@@ -114,6 +123,17 @@ Nota: l'agente carica autonomamente la skill `endpoint-creator` perché la `desc
 La skill può anche essere chiamata esplicitamente, ad esempio con:
 > Usa la skill /endpoint-creator per aggiungere un endpoint `DELETE /tasks/:id` che cancella un task esistente.
 
+<details>
+<summary>🔵 <b>Claude Code — Step 2</b></summary>
+
+Stesso identico contenuto di `SKILL.md`, solo un'altra cartella: crea il file in **`.claude/skills/endpoint-creator/SKILL.md`** al root del workspace (Claude Code carica le skill da `.claude/skills/`). Il frontmatter (`name` + `description`) e il corpo sono **identici** a quelli mostrati sopra — copiali tal quali.
+
+Poi apri una nuova conversazione in Claude Code e usa **lo stesso prompt** (`DELETE /tasks/:id`) **senza nominare la skill**: Claude la auto-carica perché la `description` matcha il task. Per invocarla esplicitamente digita `/endpoint-creator` nel prompt (le skill compaiono come slash command quando digiti `/`).
+
+Reference: `modules/M1-istruzioni/solution/.claude/skills/endpoint-creator/SKILL.md`.
+
+</details>
+
 ## Wrap
 
 - AGENTS.md = identità del repo, regole sempre vere, paghi token sempre.
@@ -126,5 +146,7 @@ La skill può anche essere chiamata esplicitamente, ad esempio con:
 - Una skill funzionante in `.github/skills/endpoint-creator/` al root del workspace.
 
 Se ti blocchi: `solution/.github/skills/endpoint-creator/SKILL.md` contiene la versione di riferimento da copiare al root del repo.
+
+> 🔵 Claude Code: la versione di riferimento è in `solution/.claude/skills/endpoint-creator/SKILL.md` (stesso contenuto), da copiare in `.claude/skills/endpoint-creator/SKILL.md` al root del repo.
 
 ➡️ Prossimo modulo: [`../M2-capacita/README.md`](../M2-capacita/README.md)

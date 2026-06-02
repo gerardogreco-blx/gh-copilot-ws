@@ -2,6 +2,8 @@
 
 > Workshop hands-on su Spec-Driven Development, AGENTS.md, Skills, Subagents, MCP, Hooks, Plugins & Marketplace
 
+> 🟣 **GitHub Copilot** o 🔵 **Claude Code**? Questo workshop si può seguire **indifferentemente** con **GitHub Copilot** (Chat in VS Code) **oppure** con **Claude Code** (estensione VS Code). Concetti, teoria, prompt ed esercizi sono **identici**: cambiano solo i path dei file di configurazione e i comandi dell'IDE. In ogni modulo, i passi specifici per Claude Code sono nei blocchi **🔵 Claude Code** sotto ciascuno step. Il setup specifico per Claude Code è segnalato qui sotto con la stessa icona.
+
 ### Step 1 - Fork del repository
 
 Click sul pulsante **"Fork"** in alto a destra in questa pagina, oppure usa direttamente questo link:
@@ -54,6 +56,13 @@ Per cambiare la lingua della UI di VS Code (menu, notifiche, ecc.):
 1. Command Palette => `Configure Display Language`
 2. Scegli la lingua preferita (es. `english`)
 
+### Step 6 - 🔵 (Solo se usi Claude Code) Accedi all'estensione nel Codespace
+
+Il devcontainer pre-installa **sia GitHub Copilot sia l'estensione Claude Code** (`anthropic.claude-code`, publisher Anthropic). Se preferisci seguire il workshop con **Claude Code**:
+
+1. Apri il pannello Claude Code (icona ✱ nella barra in alto a destra dell'editor, oppure dalla Activity Bar a sinistra) e accedi con il tuo account Anthropic quando richiesto.
+2. Il repo contiene già `.mcp.json` e `CLAUDE.md` al root: Claude Code li rileva automaticamente all'apertura del workspace (vedi [Step 4](#step-4---avvio-mcp-server-context7) per MCP). Gli hook si abilitano da soli quando crei `.claude/settings.json` nei moduli M3/M4 - **non serve** alcuna impostazione tipo `chat.useHooks`.
+
 ### Configurazione locale
 
 Se per qualche motivo non puoi usare Codespaces, puoi seguire il workshop in locale. Vedi [setup locale](#setup-locale-fallback).
@@ -69,6 +78,7 @@ Se non puoi usare GitHub Codespaces, puoi seguire il workshop in locale.
 | Git | per clonare il repo |
 | VS Code (≥ 1.110) | per agent mode e plugin support |
 | Estensione `GitHub.copilot` + `GitHub.copilot-chat` | sottoscrizione Copilot attiva richiesta |
+| 🔵 _oppure_ estensione **Claude Code** (publisher Anthropic) | alternativa a Copilot; richiede un account Anthropic. Stessi esercizi, percorso identico - segui i blocchi 🔵 Claude Code |
 | Node.js 20+ | richiesto **solo se scegli lo starter TypeScript**. Context7 ora è un endpoint HTTP hosted, non più un processo locale |
 | **Uno** tra .NET 10 SDK / Python 3.11+ | solo per il linguaggio di starter che scegli (TypeScript usa già Node) |
 | `jq` (Unix) o PowerShell 7+ (Windows) | necessario per gli hook script in M3/M4 |
@@ -132,6 +142,16 @@ VS Code Copilot Chat rileva il file all'apertura del workspace e ti propone di a
 
 Se non parte automaticamente: Command Palette => `MCP: List Servers` => seleziona `context7` => `Avvia Server`.
 
+> 🔵 **Claude Code**: usa il file `.mcp.json` (già presente al root del workspace), equivalente di `.vscode/mcp.json` ma nel formato Claude (chiave `mcpServers`, stesso endpoint HTTP hosted di Context7). Claude Code lo rileva all'apertura del workspace e chiede l'approvazione del server. Per gestirlo, digita `/mcp` nel pannello Claude Code. Non serve Node.js: l'endpoint è HTTP hosted.
+>
+> ```json
+> {
+>   "mcpServers": {
+>     "context7": { "type": "http", "url": "https://mcp.context7.com/mcp" }
+>   }
+> }
+> ```
+
 ### Step 5 - Configurazione hook (per M3 e M4)
 
 > **Dove crei i file durante il workshop**: tutte le customizations Copilot (skill, subagent, hook, plugin) che creerai durante i moduli vanno **al root del workspace** (`/workspaces/gh-copilot-ws/`), non dentro la cartella delle starter. Il README di ogni modulo te lo ricorda. Le starter contengono solo il codice della Task API (.NET / TS / Python) per il linguaggio che hai scelto.
@@ -152,13 +172,17 @@ Per abilitare i hook in Copilot Chat, aprire le impostazioni di VS Code (`Ctrl+,
 }
 ```
 
+> 🔵 **Claude Code**: gli hook si registrano in `.claude/settings.json` (chiave `hooks`) al root del workspace e sono **attivi di default** - non esiste un'impostazione tipo `chat.useHooks` da spuntare. I file `.github/hooks/*.json` di Copilot non servono: la registrazione vive direttamente in `settings.json`. Gli script hook leggono da stdin un JSON con i campi `tool_name` / `tool_input` (non `tool` / `parameters`) e **bloccano un'azione con `exit 2`** (stderr mostrato all'agente). I dettagli e gli script pronti sono nei blocchi 🔵 Claude Code di M3 e M4; le versioni di riferimento sono in `modules/M3-governance/solution/.claude/` e `modules/M4-distribuzione/solution/.claude/`. Anche per Claude serve `jq` (Unix) o PowerShell 7+ (Windows).
+
 ## Si parte
 
-> ⚠️ **Importante — non cambiare il workspace root**
+> ⚠️ **Importante - non cambiare il workspace root**
 >
 > Il workspace VS Code deve **rimanere il root del repo** (`/workspaces/gh-copilot-ws`) per tutto il workshop. Apri i README dei moduli come **file** (Explorer sidebar oppure `Cmd/Ctrl+P` → digita il path), **NON** con `File → Open Folder` sulla cartella del modulo.
 >
-> Perché: tutte le customizations Copilot (skill, subagent, hook, plugin) che creerai vanno al **root del workspace** — se cambi workspace finiscono nel posto sbagliato e Copilot non le carica.
+> Perché: tutte le customizations Copilot (skill, subagent, hook, plugin) che creerai vanno al **root del workspace** - se cambi workspace finiscono nel posto sbagliato e Copilot non le carica.
+>
+> 🔵 Vale identico per **Claude Code**: le customizations vivono in `.claude/` (skill, subagent, hook, `settings.json`) e in `plugins/` al **root del workspace**. `CLAUDE.md` al root importa `AGENTS.md`, quindi entrambi gli strumenti condividono lo stesso contratto di repo.
 >
 > Suggerimento UX: con il README aperto, premi `Cmd+Shift+V` (macOS) o `Ctrl+Shift+V` (Win/Linux) per il preview Markdown formattato.
 
